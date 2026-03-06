@@ -58,6 +58,10 @@ canvas{
 
 <canvas id="gameCanvas"></canvas>
 
+<audio id="bgMusic" loop>
+  <source src="music.mp3" type="audio/mpeg">
+</audio>
+
 <div id="menu" class="overlay">
   <h1>RANK DASH</h1>
   <button onclick="showLevels()">Play</button>
@@ -66,7 +70,7 @@ canvas{
 
 <div id="levelMenu" class="overlay hidden">
   <h1>Select Level</h1>
-  <button onclick="startLevel1()">Level 1 (Fixed 5 Min)</button>
+  <button onclick="startLevel1()">Level 1 (Easy)</button>
   <button onclick="backToMenu()">Back</button>
 </div>
 
@@ -79,6 +83,7 @@ canvas{
 <script>
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+const music=document.getElementById("bgMusic");
 
 function resize(){
   canvas.width = window.innerWidth;
@@ -92,12 +97,39 @@ let groundY;
 let cameraX=0;
 let running=false;
 
-const levelLength=110000; // ~5 phút
+const levelLength=8000;
+
 let obstacles=[];
+let progress=0;
+let trail=[];
+let stars=[];
+
+for(let i=0;i<120;i++){
+  stars.push({
+    x:Math.random()*20000,
+    y:Math.random()*800,
+    size:Math.random()*2+1,
+    speed:Math.random()*0.5+0.2
+  });
+}
+
+function drawBackground(){
+  stars.forEach(s=>{
+    const sx=s.x-cameraX*s.speed;
+
+    ctx.fillStyle="white";
+    ctx.fillRect(sx,s.y,s.size,s.size);
+
+    if(sx<0){
+      s.x+=20000;
+    }
+  });
+}
 
 function initLevel1(){
   groundY=canvas.height-120;
   cameraX=0;
+  progress=0;
 
   player={
     x:200,
@@ -111,37 +143,27 @@ function initLevel1(){
   };
 
   obstacles=[];
-  let x=800;
 
-  // Pattern cố định lặp lại
-  while(x < levelLength-1000){
+  let x=900;
 
-    // Pattern 1
-    obstacles.push({x:x,type:"spike"});
-    x+=300;
+  while(x<levelLength-1200){
 
     obstacles.push({x:x,type:"spike"});
-    x+=400;
+    x+=350;
 
     obstacles.push({x:x,type:"block"});
-    x+=500;
+    x+=350;
 
-    obstacles.push({x:x,type:"spike"});
-    x+=300;
-
-    obstacles.push({x:x,type:"double"});
-    x+=600;
-
-    obstacles.push({x:x,type:"spike"});
-    x+=400;
-
+    obstacles.push({x:x,type:"platform"});
+    x+=450;
   }
 }
 
 function update(){
-  if(!running || !player) return;
+  if(!running||!player) return;
 
   cameraX+=5;
+  progress=cameraX/levelLength;
 
   player.dy+=player.gravity;
   player.y+=player.dy;
@@ -156,6 +178,9 @@ function update(){
     player.rotation+=0.15;
   }
 
+  trail.push({x:player.x+25,y:player.y+25});
+  if(trail.length>15) trail.shift();
+
   obstacles.forEach(o=>{
     const ox=o.x-cameraX;
 
@@ -169,9 +194,9 @@ function update(){
       }
     }
 
-    if(o.type==="block"||o.type==="double"){
-      const width=(o.type==="block")?60:80;
-      const height=(o.type==="block")?60:80;
+    if(o.type==="block"){
+      const width=60;
+      const height=60;
       const top=groundY-height;
 
       const overlapX=
@@ -183,18 +208,40 @@ function update(){
         player.y<groundY;
 
       if(overlapX&&overlapY){
-
         if(player.dy>=0 &&
            player.y+player.size-player.dy<=top){
           player.y=top-player.size;
           player.dy=0;
           player.grounded=true;
-        }
-        else{
+        }else{
           end(false);
         }
       }
     }
+
+    if(o.type==="platform"){
+
+      const width=100;
+      const height=20;
+      const top=groundY-120;
+
+      const overlapX=
+        player.x+player.size>ox &&
+        player.x<ox+width;
+
+      const overlapY=
+        player.y+player.size>top &&
+        player.y<top+height;
+
+      if(overlapX&&overlapY){
+        if(player.dy>=0){
+          player.y=top-player.size;
+          player.dy=0;
+          player.grounded=true;
+        }
+      }
+    }
+
   });
 
   if(cameraX>levelLength){
@@ -203,6 +250,14 @@ function update(){
 }
 
 function drawPlayer(){
+
+  trail.forEach((t,i)=>{
+    ctx.fillStyle="rgba(0,255,255,"+(i/15)+")";
+    ctx.beginPath();
+    ctx.arc(t.x,t.y,8,0,Math.PI*2);
+    ctx.fill();
+  });
+
   ctx.save();
   ctx.translate(player.x+25,player.y+25);
   ctx.rotate(player.rotation);
@@ -224,6 +279,8 @@ function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   if(!player) return;
 
+  drawBackground();
+
   ctx.fillStyle="white";
   ctx.fillRect(0,groundY,canvas.width,4);
 
@@ -231,9 +288,9 @@ function draw(){
 
   obstacles.forEach(o=>{
     const ox=o.x-cameraX;
-    ctx.fillStyle="#ff0055";
 
     if(o.type==="spike"){
+      ctx.fillStyle="#ff0055";
       ctx.beginPath();
       ctx.moveTo(ox,groundY);
       ctx.lineTo(ox+20,groundY-40);
@@ -243,16 +300,25 @@ function draw(){
     }
 
     if(o.type==="block"){
+      ctx.fillStyle="#aa00ff";
       ctx.fillRect(ox,groundY-60,60,60);
     }
 
-    if(o.type==="double"){
-      ctx.fillRect(ox,groundY-80,80,80);
+    if(o.type==="platform"){
+      ctx.fillStyle="#00ffaa";
+      ctx.fillRect(ox,groundY-120,100,20);
     }
+
   });
 
   ctx.fillStyle="yellow";
   ctx.fillRect(levelLength-cameraX,groundY-200,10,200);
+
+  ctx.fillStyle="#333";
+  ctx.fillRect(20,20,300,10);
+
+  ctx.fillStyle="#00ffcc";
+  ctx.fillRect(20,20,300*progress,10);
 }
 
 function loop(){
@@ -262,8 +328,8 @@ function loop(){
 }
 loop();
 
-document.addEventListener("keydown",e=>{
-  if(e.code==="Space"&&running&&player.grounded){
+document.addEventListener("mousedown",()=>{
+  if(running&&player&&player.grounded){
     player.dy=player.jump;
   }
 });
@@ -272,28 +338,39 @@ function showLevels(){
   document.getElementById("menu").classList.add("hidden");
   document.getElementById("levelMenu").classList.remove("hidden");
 }
+
 function backToMenu(){
   running=false;
+  music.pause();
+  music.currentTime=0;
   player=null;
   document.getElementById("levelMenu").classList.add("hidden");
   document.getElementById("resultMenu").classList.add("hidden");
   document.getElementById("menu").classList.remove("hidden");
 }
+
 function startLevel1(){
   document.getElementById("levelMenu").classList.add("hidden");
   initLevel1();
+  music.play();
   running=true;
 }
+
 function end(win){
   running=false;
+  music.pause();
   document.getElementById("resultText").innerText=win?"YOU WIN 🎉":"GAME OVER";
   document.getElementById("resultMenu").classList.remove("hidden");
 }
+
 function restart(){
   document.getElementById("resultMenu").classList.add("hidden");
   initLevel1();
+  music.currentTime=0;
+  music.play();
   running=true;
 }
+
 function goHome(){
   window.location.href="index.html";
 }
