@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Rank Dash</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{
+  margin:0;
+  overflow:hidden;
+  background:#0f0f1a;
+  font-family:Arial,sans-serif;
+}
+canvas{
+  display:block;
+  background:linear-gradient(#0f0f1a,#1a1a40);
+}
+
+.overlay{
+  position:fixed;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  z-index:10;
+  background:linear-gradient(135deg,#00ffcc,#ffee00,#00ffcc);
+  background-size:400% 400%;
+  animation:gradientMove 8s ease infinite;
+}
+.hidden{display:none;}
+
+@keyframes gradientMove{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+
+.overlay h1{
+  font-size:50px;
+  color:white;
+}
+
+.overlay button{
+  padding:14px 30px;
+  margin:10px;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+  font-size:16px;
+  font-weight:bold;
+  background:linear-gradient(90deg,#00ffcc,#ffee00);
+  color:black;
+}
+</style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<audio id="bgMusic" loop>
+  <source src="music.mp3" type="audio/mpeg">
+</audio>
+
+<div id="menu" class="overlay">
+  <h1>RANK DASH</h1>
+  <button onclick="showLevels()">Play</button>
+  <button onclick="goHome()">Back to HP Game</button>
+</div>
+
+<div id="levelMenu" class="overlay hidden">
+  <h1>Select Level</h1>
+  <button onclick="startLevel1()">Level 1 (Easy)</button>
+  <button onclick="backToMenu()">Back</button>
+</div>
+
+<div id="resultMenu" class="overlay hidden">
+  <h1 id="resultText"></h1>
+  <button onclick="restart()">Retry</button>
+  <button onclick="backToMenu()">Main Menu</button>
+</div>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const music=document.getElementById("bgMusic");
+
+function resize(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
+
+let player=null;
+let groundY;
+let cameraX=0;
+let running=false;
+
+const levelLength=8000;
+
+let obstacles=[];
+let progress=0;
+let trail=[];
+let stars=[];
+
+for(let i=0;i<120;i++){
+  stars.push({
+    x:Math.random()*20000,
+    y:Math.random()*800,
+    size:Math.random()*2+1,
+    speed:Math.random()*0.5+0.2
+  });
+}
+
+function drawBackground(){
+  stars.forEach(s=>{
+    const sx=s.x-cameraX*s.speed;
+
+    ctx.fillStyle="white";
+    ctx.fillRect(sx,s.y,s.size,s.size);
+
+    if(sx<0){
+      s.x+=20000;
+    }
+  });
+}
+
+function initLevel1(){
+  groundY=canvas.height-120;
+  cameraX=0;
+  progress=0;
+
+  player={
+    x:200,
+    y:groundY-50,
+    size:50,
+    dy:0,
+    gravity:0.8,
+    jump:-16,
+    grounded:true,
+    rotation:0
+  };
+
+  obstacles=[];
+
+  let x=900;
+
+  while(x<levelLength-1200){
+
+    obstacles.push({x:x,type:"spike"});
+    x+=350;
+
+    obstacles.push({x:x,type:"block"});
+    x+=350;
+
+    obstacles.push({x:x,type:"platform"});
+    x+=450;
+  }
+}
+
+function update(){
+  if(!running||!player) return;
+
+  cameraX+=5;
+  progress=cameraX/levelLength;
+
+  player.dy+=player.gravity;
+  player.y+=player.dy;
+  player.grounded=false;
+
+  if(player.y>=groundY-player.size){
+    player.y=groundY-player.size;
+    player.dy=0;
+    player.grounded=true;
+    player.rotation=0;
+  }else{
+    player.rotation+=0.15;
+  }
+
+  trail.push({x:player.x+25,y:player.y+25});
+  if(trail.length>15) trail.shift();
+
+  obstacles.forEach(o=>{
+    const ox=o.x-cameraX;
+
+    if(o.type==="spike"){
+      if(
+        player.x+player.size>ox &&
+        player.x<ox+40 &&
+        player.y+player.size>groundY-40
+      ){
+        end(false);
+      }
+    }
+
+    if(o.type==="block"){
+      const width=60;
+      const height=60;
+      const top=groundY-height;
+
+      const overlapX=
+        player.x+player.size>ox &&
+        player.x<ox+width;
+
+      const overlapY=
+        player.y+player.size>top &&
+        player.y<groundY;
+
+      if(overlapX&&overlapY){
+        if(player.dy>=0 &&
+           player.y+player.size-player.dy<=top){
+          player.y=top-player.size;
+          player.dy=0;
+          player.grounded=true;
+        }else{
+          end(false);
+        }
+      }
+    }
+
+    if(o.type==="platform"){
+
+      const width=100;
+      const height=20;
+      const top=groundY-120;
+
+      const overlapX=
+        player.x+player.size>ox &&
+        player.x<ox+width;
+
+      const overlapY=
+        player.y+player.size>top &&
+        player.y<top+height;
+
+      if(overlapX&&overlapY){
+        if(player.dy>=0){
+          player.y=top-player.size;
+          player.dy=0;
+          player.grounded=true;
+        }
+      }
+    }
+
+  });
+
+  if(cameraX>levelLength){
+    end(true);
+  }
+}
+
+function drawPlayer(){
+
+  trail.forEach((t,i)=>{
+    ctx.fillStyle="rgba(0,255,255,"+(i/15)+")";
+    ctx.beginPath();
+    ctx.arc(t.x,t.y,8,0,Math.PI*2);
+    ctx.fill();
+  });
+
+  ctx.save();
+  ctx.translate(player.x+25,player.y+25);
+  ctx.rotate(player.rotation);
+
+  const gradient=ctx.createLinearGradient(-25,-25,25,25);
+  gradient.addColorStop(0,"#00f5ff");
+  gradient.addColorStop(1,"#ff00c8");
+
+  ctx.shadowColor="#00f5ff";
+  ctx.shadowBlur=25;
+
+  ctx.fillStyle=gradient;
+  ctx.fillRect(-25,-25,50,50);
+
+  ctx.restore();
+}
+
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(!player) return;
+
+  drawBackground();
+
+  ctx.fillStyle="white";
+  ctx.fillRect(0,groundY,canvas.width,4);
+
+  drawPlayer();
+
+  obstacles.forEach(o=>{
+    const ox=o.x-cameraX;
+
+    if(o.type==="spike"){
+      ctx.fillStyle="#ff0055";
+      ctx.beginPath();
+      ctx.moveTo(ox,groundY);
+      ctx.lineTo(ox+20,groundY-40);
+      ctx.lineTo(ox+40,groundY);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    if(o.type==="block"){
+      ctx.fillStyle="#aa00ff";
+      ctx.fillRect(ox,groundY-60,60,60);
+    }
+
+    if(o.type==="platform"){
+      ctx.fillStyle="#00ffaa";
+      ctx.fillRect(ox,groundY-120,100,20);
+    }
+
+  });
+
+  ctx.fillStyle="yellow";
+  ctx.fillRect(levelLength-cameraX,groundY-200,10,200);
+
+  ctx.fillStyle="#333";
+  ctx.fillRect(20,20,300,10);
+
+  ctx.fillStyle="#00ffcc";
+  ctx.fillRect(20,20,300*progress,10);
+}
+
+function loop(){
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+
+document.addEventListener("mousedown",()=>{
+  if(running&&player&&player.grounded){
+    player.dy=player.jump;
+  }
+});
+
+function showLevels(){
+  document.getElementById("menu").classList.add("hidden");
+  document.getElementById("levelMenu").classList.remove("hidden");
+}
+
+function backToMenu(){
+  running=false;
+  music.pause();
+  music.currentTime=0;
+  player=null;
+  document.getElementById("levelMenu").classList.add("hidden");
+  document.getElementById("resultMenu").classList.add("hidden");
+  document.getElementById("menu").classList.remove("hidden");
+}
+
+function startLevel1(){
+  document.getElementById("levelMenu").classList.add("hidden");
+  initLevel1();
+  music.play();
+  running=true;
+}
+
+function end(win){
+  running=false;
+  music.pause();
+  document.getElementById("resultText").innerText=win?"YOU WIN 🎉":"GAME OVER";
+  document.getElementById("resultMenu").classList.remove("hidden");
+}
+
+function restart(){
+  document.getElementById("resultMenu").classList.add("hidden");
+  initLevel1();
+  music.currentTime=0;
+  music.play();
+  running=true;
+}
+
+function goHome(){
+  window.location.href="index.html";
+}
+</script>
+
+</body>
+</html>
