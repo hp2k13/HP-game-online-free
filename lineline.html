@@ -2,111 +2,88 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HP Game | Dò Mìn Rank Dash Style</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
+    <title>HP Game | Minesweeper Fixed</title>
     <style>
         :root {
             --primary: #00f5ff;
             --danger: #ff4757;
-            --bg: #050510;
+            --cell-size: 35px;
         }
         body {
             margin: 0; padding: 0; overflow: hidden; 
-            background: #1a1a2e; font-family: 'Segoe UI', sans-serif; 
-            user-select: none; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; height: 100vh;
+            background: #0a0a1a; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            user-select: none; -webkit-user-select: none;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
         }
-
-        /* NÚT X GIỐNG HỆT CODE RANK DASH BẠN GỬI */
         .home-btn {
             position: fixed; top: 20px; left: 20px;
-            padding: 12px 25px; background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px; background: rgba(255, 255, 255, 0.1);
             color: white; text-decoration: none; border-radius: 30px;
-            font-weight: bold; z-index: 1000; border: 2px solid #fff;
-            transition: 0.3s; font-size: 14px;
+            font-weight: bold; z-index: 1000; border: 1px solid #fff;
         }
-        .home-btn:hover { background: #ff4757; transform: scale(1.1); }
-
-        /* HUD HIỂN THỊ LEVEL */
         .level-tag {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            padding: 10px 30px; background: rgba(255, 255, 255, 0.1);
+            padding: 8px 25px; background: rgba(0, 245, 255, 0.1);
             border-radius: 20px; border: 1px solid var(--primary);
-            color: white; font-weight: bold; font-size: 18px;
-            box-shadow: 0 0 15px rgba(0, 245, 255, 0.3);
+            color: var(--primary); font-weight: bold; font-size: 18px;
         }
-
-        /* OVERLAY MÀN HÌNH */
+        .controls { margin-bottom: 20px; display: flex; gap: 10px; }
+        .mode-btn {
+            padding: 12px 25px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.1);
+            background: #1e1e30; color: white; cursor: pointer; font-weight: bold; transition: 0.2s;
+        }
+        .mode-btn.active {
+            background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary);
+        }
+        .grid-container { 
+            padding: 10px; background: #161625; border-radius: 12px; border: 2px solid #2a2a40; 
+        }
+        .grid { display: grid; gap: 4px; }
+        .cell {
+            width: var(--cell-size); height: var(--cell-size); background: #2a2a40;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 16px; color: white;
+        }
+        .cell.revealed { background: #cbd5e0; color: #1a202c; cursor: default; }
+        .cell.mine { background: var(--danger) !important; }
         .overlay {
             position: fixed; inset: 0; display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 100;
-            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(10px); color: white;
         }
         .hidden { display: none !important; }
-
-        .main-title {
-            font-size: 60px; color: white; font-weight: 900;
-            text-shadow: 4px 4px 0px #000; margin-bottom: 20px; letter-spacing: 5px;
+        .btn-play {
+            padding: 15px 40px; background: #2ecc71; border: none; border-radius: 30px;
+            color: white; font-weight: bold; font-size: 20px; cursor: pointer; margin-top: 20px;
         }
-
-        /* NÚT PLAY GIỐNG RANK DASH */
-        .play-btn {
-            width: 100px; height: 100px; background: #2ecc71;
-            border-radius: 20px; border: 5px solid white;
-            cursor: pointer; display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 6px 0px #27ae60; transition: 0.2s;
-        }
-        .play-btn:hover { transform: scale(1.1); }
-        .play-icon { 
-            width: 0; height: 0; 
-            border-top: 25px solid transparent; border-bottom: 25px solid transparent; 
-            border-left: 40px solid white; margin-left: 8px; 
-        }
-
-        /* GIAO DIỆN BÀN CỜ DÒ MÌN */
-        .grid-container { 
-            padding: 20px; background: rgba(255,255,255,0.05); 
-            border-radius: 15px; border: 2px solid rgba(255,255,255,0.1); 
-        }
-        .grid { display: grid; grid-template-columns: repeat(10, 38px); gap: 3px; }
-        .cell {
-            width: 38px; height: 38px; background: #2a2a3a;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold; cursor: pointer; border-radius: 4px; 
-            font-size: 18px; transition: 0.1s; color: white;
-        }
-        .cell:hover { background: #3e3e5e; border: 1px solid var(--primary); }
-        .cell.revealed { background: #cbd5e0; color: #1a202c; cursor: default; }
-        .cell.mine { background: var(--danger) !important; box-shadow: inset 0 0 10px #000; }
-
-        .victory-text { color: #ffee00; font-size: 50px; text-shadow: 0 0 20px #ffee00; margin-bottom: 20px; }
+        @media (max-width: 600px) { :root { --cell-size: 30px; } }
     </style>
 </head>
 <body>
 
-    <a href="index.html" class="home-btn">X</a>
-    
+    <a href="#" class="home-btn">X</a>
     <div class="level-tag" id="lvlDisplay">LEVEL 1</div>
 
     <div id="mainMenu" class="overlay">
-        <h1 class="main-title">MINESWEEPER</h1>
-        <p style="color: white; margin-bottom: 30px; opacity: 0.8;">HP Game Studio - Level System</p>
-        <div class="play-btn" onclick="startGame(true)">
-            <div class="play-icon"></div>
-        </div>
+        <h1>MINESWEEPER</h1>
+        <button class="btn-play" onclick="startGame(true)">START GAME</button>
     </div>
 
     <div id="deathMenu" class="overlay hidden">
-        <h1 style="color: #ff4757; font-size: 50px; font-weight: 900;">FAILED</h1>
-        <p id="failLvl" style="color: white; margin-bottom: 20px;">Bạn dừng lại ở Level 1</p>
-        <div class="play-btn" onclick="startGame(true)">
-            <div class="play-icon"></div>
-        </div>
+        <h1 style="color: var(--danger)">GAME OVER</h1>
+        <p id="failLvl"></p>
+        <button class="btn-play" onclick="startGame(true)">RETRY</button>
     </div>
 
     <div id="winMenu" class="overlay hidden">
-        <h1 class="victory-text">COMPLETE! 🎉</h1>
-        <button onclick="startGame(false)" style="padding: 15px 40px; border-radius: 10px; border: none; background: #fff; cursor: pointer; font-weight: bold; font-size: 18px;">NEXT LEVEL</button>
+        <h1 style="color: #ffee00">VICTORY!</h1>
+        <button class="btn-play" onclick="startGame(false)">NEXT LEVEL</button>
+    </div>
+
+    <div class="controls">
+        <div id="digMode" class="mode-btn active" onclick="setMode('dig')">⛏️ Dig</div>
+        <div id="flagMode" class="mode-btn" onclick="setMode('flag')">🚩 Flag</div>
     </div>
 
     <div class="grid-container">
@@ -115,106 +92,126 @@
 
     <script>
         const gridBox = document.getElementById('grid');
-        const mainMenu = document.getElementById('mainMenu');
-        const deathMenu = document.getElementById('deathMenu');
-        const winMenu = document.getElementById('winMenu');
-        const lvlDisplay = document.getElementById('lvlDisplay');
-        
-        let width = 10, bombs = 15, squares = [], isOver = false;
-        let currentLevel = 1;
+        let width = 10, bombAmount = 12, squares = [], isOver = false, currentLevel = 1, firstClick = true, currentMode = 'dig';
 
-        function startGame(resetLevel) {
-            if (resetLevel) currentLevel = 1;
-            else currentLevel++;
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('digMode').classList.toggle('active', mode === 'dig');
+            document.getElementById('flagMode').classList.toggle('active', mode === 'flag');
+        }
+
+        function startGame(reset) {
+            if (reset) { currentLevel = 1; bombAmount = 12; } 
+            else { currentLevel++; bombAmount = Math.min(bombAmount + 2, 35); }
             
-            lvlDisplay.innerText = "LEVEL " + currentLevel;
-            isOver = false; squares = []; gridBox.innerHTML = '';
-            
-            mainMenu.classList.add('hidden'); 
-            deathMenu.classList.add('hidden');
-            winMenu.classList.add('hidden');
+            document.getElementById('lvlDisplay').innerText = "LEVEL " + currentLevel;
+            isOver = false; firstClick = true; squares = [];
+            gridBox.innerHTML = '';
+            gridBox.style.gridTemplateColumns = `repeat(${width}, 1fr)`;
+            document.querySelectorAll('.overlay').forEach(el => el.classList.add('hidden'));
 
-            const gameArray = Array(width*width - bombs).fill('safe').concat(Array(bombs).fill('mine')).sort(() => Math.random() - 0.5);
-
-            for(let i=0; i<width*width; i++) {
+            for(let i = 0; i < width * width; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
-                cell.dataset.type = gameArray[i];
                 cell.id = i;
-                cell.onclick = () => handleClick(cell);
+                cell.addEventListener('click', () => handleAction(i));
+                cell.addEventListener('contextmenu', (e) => { e.preventDefault(); addFlag(i); });
                 gridBox.appendChild(cell);
                 squares.push(cell);
             }
+        }
 
-            for (let i=0; i<squares.length; i++) {
-                if (squares[i].dataset.type === 'safe') {
-                    let total = 0;
-                    const isLeft = (i % width === 0), isRight = (i % width === width - 1);
-                    const neighbors = [-1, 1, -width, width, -width-1, -width+1, width-1, width+1];
-                    neighbors.forEach(n => {
-                        let target = i + n;
-                        if (target >= 0 && target < 100) {
-                            if (n === -1 && isLeft) return;
-                            if (n === 1 && isRight) return;
-                            if ((n === -11 || n === 9) && isLeft) return;
-                            if ((n === -9 || n === 11) && isRight) return;
-                            if (squares[target].dataset.type === 'mine') total++;
-                        }
-                    });
-                    squares[i].dataset.count = total;
+        function handleAction(id) {
+            if (isOver) return;
+            if (currentMode === 'flag') addFlag(id);
+            else revealCell(id);
+        }
+
+        function addFlag(id) {
+            const cell = squares[id];
+            if (isOver || cell.classList.contains('revealed')) return;
+            cell.classList.toggle('flagged');
+            cell.innerHTML = cell.classList.contains('flagged') ? '🚩' : '';
+        }
+
+        function plantBombs(safeId) {
+            let bombCount = 0;
+            while (bombCount < bombAmount) {
+                let random = Math.floor(Math.random() * squares.length);
+                // Không đặt bom vào ô click đầu tiên hoặc các ô xung quanh nó
+                let neighbors = getNeighborIndices(safeId);
+                if (random !== safeId && !neighbors.includes(random) && squares[random].dataset.type !== 'mine') {
+                    squares[random].dataset.type = 'mine';
+                    bombCount++;
                 }
             }
+            squares.forEach((s, i) => {
+                if (s.dataset.type !== 'mine') {
+                    s.dataset.type = 'safe';
+                    let mines = getNeighborIndices(i).filter(idx => squares[idx].dataset.type === 'mine').length;
+                    s.dataset.count = mines;
+                }
+            });
         }
 
-        function handleClick(cell) {
-            if (isOver || cell.classList.contains('revealed')) return;
-            cell.classList.add('revealed');
-            
+        function getNeighborIndices(id) {
+            const r = Math.floor(id / width), c = id % width, res = [];
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    let nr = r + i, nc = c + j;
+                    if (nr >= 0 && nr < width && nc >= 0 && nc < width && !(i === 0 && j === 0)) 
+                        res.push(nr * width + nc);
+                }
+            }
+            return res;
+        }
+
+        // Dùng vòng lặp thay cho đệ quy để tránh lỗi "Đỏ" (Stack Overflow)
+        function revealCell(id) {
+            if (isOver || squares[id].classList.contains('revealed') || squares[id].classList.contains('flagged')) return;
+
+            if (firstClick) {
+                firstClick = false;
+                plantBombs(id);
+            }
+
+            const cell = squares[id];
             if (cell.dataset.type === 'mine') {
                 gameOver();
-            } else {
-                let num = cell.dataset.count;
-                if (num != 0) {
-                    cell.innerHTML = num;
-                    cell.style.color = ['','#00f5ff','#2ecc71','#ff4757','#a29bfe','#fdcb6e','#e17055','#000','#fff'][num];
-                } else { flood(parseInt(cell.id)); }
-                checkWin();
+                return;
             }
-        }
 
-        function flood(id) {
-            const isLeft = (id % width === 0), isRight = (id % width === width - 1);
-            setTimeout(() => {
-                [-1, 1, -width, width].forEach(n => {
-                    let target = id + n;
-                    if (target >= 0 && target < 100) {
-                        if (n === -1 && isLeft) return;
-                        if (n === 1 && isRight) return;
-                        handleClick(squares[target]);
-                    }
-                });
-            }, 10);
+            // Thuật toán loang dùng Stack (tránh lỗi đệ quy)
+            let stack = [id];
+            while (stack.length > 0) {
+                let currentId = stack.pop();
+                let c = squares[currentId];
+                if (c.classList.contains('revealed')) continue;
+
+                c.classList.add('revealed');
+                let count = parseInt(c.dataset.count);
+                if (count > 0) {
+                    c.innerHTML = count;
+                    c.style.color = ['','#3498db','#2ecc71','#e74c3c','#9b59b6','#f1c40f','#e67e22','#1abc9c','#2c3e50'][count];
+                } else {
+                    getNeighborIndices(currentId).forEach(nIdx => {
+                        if (!squares[nIdx].classList.contains('revealed')) stack.push(nIdx);
+                    });
+                }
+            }
+            checkWin();
         }
 
         function checkWin() {
-            const safeSquares = squares.filter(s => s.dataset.type === 'safe');
-            const revealedSquares = safeSquares.filter(s => s.classList.contains('revealed'));
-            if (revealedSquares.length === safeSquares.length) {
-                isOver = true;
-                setTimeout(() => winMenu.classList.remove('hidden'), 500);
-            }
+            const win = squares.every(s => (s.dataset.type === 'mine') ? !s.classList.contains('revealed') : s.classList.contains('revealed'));
+            if (win) { isOver = true; setTimeout(() => document.getElementById('winMenu').classList.remove('hidden'), 300); }
         }
 
         function gameOver() {
             isOver = true;
-            document.getElementById('failLvl').innerText = "FAILED AT LEVEL " + currentLevel;
-            squares.forEach(s => { 
-                if(s.dataset.type === 'mine') { 
-                    s.innerHTML = '💣'; 
-                    s.classList.add('mine'); 
-                }
-            });
-            setTimeout(() => deathMenu.classList.remove('hidden'), 1000);
+            squares.forEach(s => { if(s.dataset.type === 'mine') { s.innerHTML = '💣'; s.classList.add('mine'); } });
+            document.getElementById('failLvl').innerText = "Level " + currentLevel;
+            setTimeout(() => document.getElementById('deathMenu').classList.remove('hidden'), 500);
         }
     </script>
 </body>
