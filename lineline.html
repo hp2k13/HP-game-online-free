@@ -1,1 +1,221 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HP Game | Dò Mìn Rank Dash Style</title>
+    <style>
+        :root {
+            --primary: #00f5ff;
+            --danger: #ff4757;
+            --bg: #050510;
+        }
+        body {
+            margin: 0; padding: 0; overflow: hidden; 
+            background: #1a1a2e; font-family: 'Segoe UI', sans-serif; 
+            user-select: none; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; height: 100vh;
+        }
 
+        /* NÚT X GIỐNG HỆT CODE RANK DASH BẠN GỬI */
+        .home-btn {
+            position: fixed; top: 20px; left: 20px;
+            padding: 12px 25px; background: rgba(0, 0, 0, 0.5);
+            color: white; text-decoration: none; border-radius: 30px;
+            font-weight: bold; z-index: 1000; border: 2px solid #fff;
+            transition: 0.3s; font-size: 14px;
+        }
+        .home-btn:hover { background: #ff4757; transform: scale(1.1); }
+
+        /* HUD HIỂN THỊ LEVEL */
+        .level-tag {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            padding: 10px 30px; background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px; border: 1px solid var(--primary);
+            color: white; font-weight: bold; font-size: 18px;
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.3);
+        }
+
+        /* OVERLAY MÀN HÌNH */
+        .overlay {
+            position: fixed; inset: 0; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 100;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
+        }
+        .hidden { display: none !important; }
+
+        .main-title {
+            font-size: 60px; color: white; font-weight: 900;
+            text-shadow: 4px 4px 0px #000; margin-bottom: 20px; letter-spacing: 5px;
+        }
+
+        /* NÚT PLAY GIỐNG RANK DASH */
+        .play-btn {
+            width: 100px; height: 100px; background: #2ecc71;
+            border-radius: 20px; border: 5px solid white;
+            cursor: pointer; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 6px 0px #27ae60; transition: 0.2s;
+        }
+        .play-btn:hover { transform: scale(1.1); }
+        .play-icon { 
+            width: 0; height: 0; 
+            border-top: 25px solid transparent; border-bottom: 25px solid transparent; 
+            border-left: 40px solid white; margin-left: 8px; 
+        }
+
+        /* GIAO DIỆN BÀN CỜ DÒ MÌN */
+        .grid-container { 
+            padding: 20px; background: rgba(255,255,255,0.05); 
+            border-radius: 15px; border: 2px solid rgba(255,255,255,0.1); 
+        }
+        .grid { display: grid; grid-template-columns: repeat(10, 38px); gap: 3px; }
+        .cell {
+            width: 38px; height: 38px; background: #2a2a3a;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; cursor: pointer; border-radius: 4px; 
+            font-size: 18px; transition: 0.1s; color: white;
+        }
+        .cell:hover { background: #3e3e5e; border: 1px solid var(--primary); }
+        .cell.revealed { background: #cbd5e0; color: #1a202c; cursor: default; }
+        .cell.mine { background: var(--danger) !important; box-shadow: inset 0 0 10px #000; }
+
+        .victory-text { color: #ffee00; font-size: 50px; text-shadow: 0 0 20px #ffee00; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="home-btn">X</a>
+    
+    <div class="level-tag" id="lvlDisplay">LEVEL 1</div>
+
+    <div id="mainMenu" class="overlay">
+        <h1 class="main-title">MINESWEEPER</h1>
+        <p style="color: white; margin-bottom: 30px; opacity: 0.8;">HP Game Studio - Level System</p>
+        <div class="play-btn" onclick="startGame(true)">
+            <div class="play-icon"></div>
+        </div>
+    </div>
+
+    <div id="deathMenu" class="overlay hidden">
+        <h1 style="color: #ff4757; font-size: 50px; font-weight: 900;">FAILED</h1>
+        <p id="failLvl" style="color: white; margin-bottom: 20px;">Bạn dừng lại ở Level 1</p>
+        <div class="play-btn" onclick="startGame(true)">
+            <div class="play-icon"></div>
+        </div>
+    </div>
+
+    <div id="winMenu" class="overlay hidden">
+        <h1 class="victory-text">COMPLETE! 🎉</h1>
+        <button onclick="startGame(false)" style="padding: 15px 40px; border-radius: 10px; border: none; background: #fff; cursor: pointer; font-weight: bold; font-size: 18px;">NEXT LEVEL</button>
+    </div>
+
+    <div class="grid-container">
+        <div id="grid" class="grid"></div>
+    </div>
+
+    <script>
+        const gridBox = document.getElementById('grid');
+        const mainMenu = document.getElementById('mainMenu');
+        const deathMenu = document.getElementById('deathMenu');
+        const winMenu = document.getElementById('winMenu');
+        const lvlDisplay = document.getElementById('lvlDisplay');
+        
+        let width = 10, bombs = 15, squares = [], isOver = false;
+        let currentLevel = 1;
+
+        function startGame(resetLevel) {
+            if (resetLevel) currentLevel = 1;
+            else currentLevel++;
+            
+            lvlDisplay.innerText = "LEVEL " + currentLevel;
+            isOver = false; squares = []; gridBox.innerHTML = '';
+            
+            mainMenu.classList.add('hidden'); 
+            deathMenu.classList.add('hidden');
+            winMenu.classList.add('hidden');
+
+            const gameArray = Array(width*width - bombs).fill('safe').concat(Array(bombs).fill('mine')).sort(() => Math.random() - 0.5);
+
+            for(let i=0; i<width*width; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.type = gameArray[i];
+                cell.id = i;
+                cell.onclick = () => handleClick(cell);
+                gridBox.appendChild(cell);
+                squares.push(cell);
+            }
+
+            for (let i=0; i<squares.length; i++) {
+                if (squares[i].dataset.type === 'safe') {
+                    let total = 0;
+                    const isLeft = (i % width === 0), isRight = (i % width === width - 1);
+                    const neighbors = [-1, 1, -width, width, -width-1, -width+1, width-1, width+1];
+                    neighbors.forEach(n => {
+                        let target = i + n;
+                        if (target >= 0 && target < 100) {
+                            if (n === -1 && isLeft) return;
+                            if (n === 1 && isRight) return;
+                            if ((n === -11 || n === 9) && isLeft) return;
+                            if ((n === -9 || n === 11) && isRight) return;
+                            if (squares[target].dataset.type === 'mine') total++;
+                        }
+                    });
+                    squares[i].dataset.count = total;
+                }
+            }
+        }
+
+        function handleClick(cell) {
+            if (isOver || cell.classList.contains('revealed')) return;
+            cell.classList.add('revealed');
+            
+            if (cell.dataset.type === 'mine') {
+                gameOver();
+            } else {
+                let num = cell.dataset.count;
+                if (num != 0) {
+                    cell.innerHTML = num;
+                    cell.style.color = ['','#00f5ff','#2ecc71','#ff4757','#a29bfe','#fdcb6e','#e17055','#000','#fff'][num];
+                } else { flood(parseInt(cell.id)); }
+                checkWin();
+            }
+        }
+
+        function flood(id) {
+            const isLeft = (id % width === 0), isRight = (id % width === width - 1);
+            setTimeout(() => {
+                [-1, 1, -width, width].forEach(n => {
+                    let target = id + n;
+                    if (target >= 0 && target < 100) {
+                        if (n === -1 && isLeft) return;
+                        if (n === 1 && isRight) return;
+                        handleClick(squares[target]);
+                    }
+                });
+            }, 10);
+        }
+
+        function checkWin() {
+            const safeSquares = squares.filter(s => s.dataset.type === 'safe');
+            const revealedSquares = safeSquares.filter(s => s.classList.contains('revealed'));
+            if (revealedSquares.length === safeSquares.length) {
+                isOver = true;
+                setTimeout(() => winMenu.classList.remove('hidden'), 500);
+            }
+        }
+
+        function gameOver() {
+            isOver = true;
+            document.getElementById('failLvl').innerText = "FAILED AT LEVEL " + currentLevel;
+            squares.forEach(s => { 
+                if(s.dataset.type === 'mine') { 
+                    s.innerHTML = '💣'; 
+                    s.classList.add('mine'); 
+                }
+            });
+            setTimeout(() => deathMenu.classList.remove('hidden'), 1000);
+        }
+    </script>
+</body>
+</html>
