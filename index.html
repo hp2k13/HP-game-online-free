@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HP Game | Thế Giới Mini Game</title>
+
+<style>
+:root {
+  --primary: #00f5ff;
+  --secondary: #ff00c8;
+  --bg: #050510;
+  --card-bg: rgba(255, 255, 255, 0.05);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background: var(--bg);
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(0, 245, 255, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(255, 0, 200, 0.05) 0%, transparent 40%);
+  color: white;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ===== HEADER ===== */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 8%;
+  background: rgba(10, 10, 25, 0.8);
+  backdrop-filter: blur(15px);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  cursor: pointer;
+}
+
+.search-box {
+  position: relative;
+}
+
+.search-box input {
+  padding: 10px 20px;
+  width: 250px;
+  border-radius: 25px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  outline: none;
+  transition: 0.3s;
+}
+
+.search-box input:focus {
+  border-color: var(--primary);
+  width: 300px;
+  box-shadow: 0 0 15px rgba(0, 245, 255, 0.3);
+}
+
+/* ===== HERO SECTION ===== */
+.hero {
+  text-align: center;
+  padding: 80px 20px;
+  animation: fadeIn 1s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero h1 {
+  font-size: 3.5rem;
+  margin-bottom: 15px;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.hero p {
+  font-size: 1.2rem;
+  opacity: 0.6;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ===== GRID HỆ THỐNG ===== */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 40px 100px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 30px;
+}
+
+.game-card {
+  background: var(--card-bg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 40px 30px;
+  text-align: center;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.game-card:hover {
+  transform: translateY(-12px);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--primary);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 245, 255, 0.2);
+}
+
+.game-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  transform: translateX(-100%);
+  transition: 0.6s;
+}
+
+.game-card:hover::before {
+  transform: translateX(100%);
+}
+
+.game-icon {
+  font-size: 60px;
+  margin-bottom: 20px;
+  display: block;
+  filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+}
+
+.game-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #fff;
+}
+
+.game-desc {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.5;
+}
+
+.badge {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  padding: 5px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.badge-hot { background: #ff4757; color: white; }
+.badge-new { background: #2ed573; color: white; }
+.badge-dev { background: #ffa502; color: white; }
+
+/* ===== NOTIFICATION ===== */
+#toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+  padding: 12px 25px;
+  border-radius: 50px;
+  font-weight: bold;
+  display: none;
+  z-index: 2000;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* ===== FOOTER ===== */
+footer {
+  text-align: center;
+  padding: 50px;
+  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.footer-links {
+  margin-bottom: 20px;
+}
+
+.footer-links a {
+  color: white;
+  text-decoration: none;
+  margin: 0 15px;
+  opacity: 0.5;
+  transition: 0.3s;
+}
+
+.footer-links a:hover { opacity: 1; color: var(--primary); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🎮 HP GAME</div>
+  <div class="search-box">
+    <input type="text" placeholder="Tìm kiếm trò chơi..." id="searchInput">
+  </div>
+</header>
+
+<section class="hero">
+  <h1>Level Up Your Fun!</h1>
+  <p>Khám phá kho tàng mini game cực đỉnh do chính tay bạn phát triển. Chơi ngay không cần cài đặt!</p>
+</section>
+
+<div class="container" id="gameGrid">
+
+  <div class="game-card" onclick="playGame('rankdash.html')">
+    <span class="badge badge-hot">Hot</span>
+    <div class="game-icon">🟥</div>
+    <div class="game-title">Rank dash</div>
+    <div class="game-desc">Vượt qua mọi rào cản với nhịp độ cực nhanh. Bạn có đủ khéo léo?</div>
+  </div>
+
+  <div class="game-card" onclick="comingSoon('Rắn Săn Mồi')">
+    <span class="badge badge-new">New</span>
+    <div class="game-icon">🐍</div>
+    <div class="game-title">Rắn Săn Mồi</div>
+    <div class="game-desc">Huyền thoại trở lại với diện mạo mới. Hãy ăn thật nhiều để lớn lên!</div>
+  </div>
+
+  <div class="game-card" onclick="comingSoon('Bắn Máy Bay')">
+    <span class="badge badge-dev">Dev</span>
+    <div class="game-icon">🚀</div>
+    <div class="game-title">Bắn Máy Bay</div>
+    <div class="game-desc">Cuộc chiến không gian kịch tính. Bảo vệ thiên hà khỏi kẻ thù.</div>
+  </div>
+
+  <div class="game-card" onclick="comingSoon('Dự án X')">
+    <div class="game-icon">🎲</div>
+    <div class="game-title">Sắp Ra Mắt</div>
+    <div class="game-desc">Một siêu phẩm mới đang được ấp ủ. Hãy cùng chờ đợi nhé!</div>
+  </div>
+
+</div>
+
+<div id="toast">Thông báo ở đây!</div>
+
+<footer>
+  <div class="footer-links">
+    <a href="#">Trang chủ</a>
+    <a href="#">Điều khoản</a>
+    <a href="#">Liên hệ</a>
+  </div>
+  <p>© 2026 HP Game Studio | Designed with ❤️</p>
+</footer>
+
+<script>
+  // Chuyển hướng đến game
+  function playGame(url) {
+    window.location.href = url;
+  }
+
+  // Thông báo khi game chưa sẵn sàng
+  function comingSoon(name) {
+    const toast = document.getElementById('toast');
+    toast.innerText = "🎮 Game '" + name + "' đang được phát triển, quay lại sau nhé!";
+    toast.style.display = 'block';
+    
+    setTimeout(() => {
+      toast.style.display = 'none';
+    }, 3000);
+  }
+
+  // Tính năng tìm kiếm đơn giản
+  document.getElementById('searchInput').addEventListener('keyup', function(e) {
+    let term = e.target.value.toLowerCase();
+    let cards = document.querySelectorAll('.game-card');
+    
+    cards.forEach(card => {
+      let title = card.querySelector('.game-title').innerText.toLowerCase();
+      if(title.includes(term)) {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

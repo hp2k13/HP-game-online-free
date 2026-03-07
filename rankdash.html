@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Rank Dash - The End Update</title>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; background: #1a1a2e; font-family: 'Segoe UI', sans-serif; user-select: none; }
+        canvas { display: block; }
+
+        .home-btn {
+            position: fixed; top: 20px; left: 20px;
+            padding: 12px 25px; background: rgba(0, 0, 0, 0.5);
+            color: white; text-decoration: none; border-radius: 30px;
+            font-weight: bold; z-index: 1000; border: 2px solid #fff;
+            transition: 0.3s; font-size: 14px;
+        }
+        .home-btn:hover { background: #ff4757; transform: scale(1.1); }
+
+        .overlay {
+            position: fixed; inset: 0; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 100;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px);
+        }
+
+        .main-title {
+            font-size: 70px; color: white; font-weight: 900;
+            text-shadow: 4px 4px 0px #000; margin-bottom: 20px; letter-spacing: 5px;
+        }
+
+        .play-btn {
+            width: 100px; height: 100px; background: #2ecc71;
+            border-radius: 20px; border: 5px solid white;
+            cursor: pointer; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 6px 0px #27ae60;
+        }
+
+        .play-icon { width: 0; height: 0; border-top: 25px solid transparent; border-bottom: 25px solid transparent; border-left: 40px solid white; margin-left: 8px; }
+
+        .progress-container {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            width: 40%; height: 10px; background: rgba(255,255,255,0.1); border-radius: 10px; display: none;
+        }
+        #progressBar { width: 0%; height: 100%; background: #00ff00; border-radius: 10px; transition: 0.1s; }
+        
+        .hidden { display: none !important; }
+
+        /* Style cho chữ Victory */
+        .victory-text { color: #ffee00; font-size: 60px; text-shadow: 0 0 20px #ffee00; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<a href="index.html" class="home-btn">X</a>
+
+<div id="mainMenu" class="overlay">
+    <h1 class="main-title">RANK DASH</h1>
+    <p style="color: white; margin-bottom: 20px;">Hold to Jump Continuously</p>
+    <div class="play-btn" onclick="startGame()">
+        <div class="play-icon"></div>
+    </div>
+</div>
+
+<div id="deathMenu" class="overlay hidden">
+    <h1 style="color: #ff4757; font-size: 50px;">FAILED</h1>
+    <div class="play-btn" onclick="startGame()">
+        <div class="play-icon"></div>
+    </div>
+</div>
+
+<div id="winMenu" class="overlay hidden">
+    <h1 class="victory-text">LEVEL COMPLETE! 🎉</h1>
+    <p style="color: white; margin-bottom: 30px; font-size: 20px;">You are a Rank Dash Pro!</p>
+    <button onclick="location.reload()" style="padding: 15px 40px; border-radius: 10px; border: none; background: #fff; cursor: pointer; font-weight: bold;">BACK TO MENU</button>
+</div>
+
+<div class="progress-container" id="pBarCont"><div id="progressBar"></div></div>
+<canvas id="gameCanvas"></canvas>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let isPlaying = false;
+let cameraX = 0;
+let groundY = canvas.height - 150;
+let isInputActive = false;
+const levelLength = 8000; // Độ dài của màn chơi
+
+let player = {
+    x: 200, y: 0, size: 50, dy: 0, 
+    gravity: 0.9, jump: -17, rotation: 0, grounded: false
+};
+
+// Map thiết kế tay
+const map = [
+    {x: 1000, t: 's'}, {x: 1500, t: 's'}, {x: 1540, t: 's'},
+    {x: 2000, t: 'b'}, {x: 2400, t: 's'}, {x: 2440, t: 's'}, {x: 2480, t: 's'},
+    {x: 3000, t: 'b', h: 60}, {x: 3300, t: 'b', h: 120}, {x: 3600, t: 'b', h: 180},
+    {x: 4200, t: 's'}, {x: 4600, t: 'b'}, {x: 4655, t: 's'},
+    {x: 5200, t: 's'}, {x: 5500, t: 's'}, {x: 5550, t: 's'},
+    {x: 6200, t: 'b', h: 80}, {x: 6800, t: 's'}, {x: 7200, t: 's'}
+];
+
+function startGame() {
+    isPlaying = true;
+    cameraX = 0;
+    player.y = groundY - player.size;
+    player.dy = 0;
+    player.rotation = 0;
+    document.getElementById("mainMenu").classList.add("hidden");
+    document.getElementById("deathMenu").classList.add("hidden");
+    document.getElementById("winMenu").classList.add("hidden");
+    document.getElementById("pBarCont").style.display = "block";
+}
+
+function update() {
+    if (!isPlaying) return;
+
+    cameraX += 8.5;
+
+    if (isInputActive && player.grounded) {
+        player.dy = player.jump;
+        player.grounded = false;
+    }
+
+    player.dy += player.gravity;
+    player.y += player.dy;
+
+    if (player.y > groundY - player.size) {
+        player.y = groundY - player.size;
+        player.dy = 0;
+        player.grounded = true;
+        player.rotation = Math.round(player.rotation / 90) * 90;
+    } else {
+        player.grounded = false;
+        player.rotation += 4.5;
+    }
+
+    // Kiểm tra va chạm vật cản
+    map.forEach(obj => {
+        let ox = obj.x - cameraX + player.x;
+        let oy = obj.h ? groundY - obj.h : groundY;
+        if (ox > player.x - 50 && ox < player.x + 50) {
+            if (obj.t === 's') {
+                if (player.x + 35 > ox + 10 && player.x + 15 < ox + 30 && player.y + 40 > groundY - 35) {
+                    gameOver();
+                }
+            } else if (obj.t === 'b') {
+                let bTop = oy - 60;
+                if (player.x + 40 > ox && player.x + 10 < ox + 50) {
+                    if (player.y + player.size > bTop && player.y + player.size < bTop + 20 && player.dy >= 0) {
+                        player.y = bTop - player.size; player.dy = 0; player.grounded = true;
+                    } else if (player.y + player.size > bTop + 10) {
+                        gameOver();
+                    }
+                }
+            }
+        }
+    });
+
+    // Cập nhật Progress Bar
+    let progress = (cameraX / levelLength) * 100;
+    document.getElementById("progressBar").style.width = Math.min(progress, 100) + "%";
+
+    // LOGIC WIN: Khi chạm đích
+    if (cameraX >= levelLength) {
+        winGame();
+    }
+}
+
+function gameOver() {
+    isPlaying = false;
+    document.getElementById("deathMenu").classList.remove("hidden");
+}
+
+function winGame() {
+    isPlaying = false;
+    document.getElementById("winMenu").classList.remove("hidden");
+    document.getElementById("pBarCont").style.display = "none";
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Vẽ mặt đất
+    ctx.fillStyle = "#16213e";
+    ctx.fillRect(0, groundY, canvas.width, canvas.height);
+    ctx.strokeStyle = "#4ecca3"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(canvas.width, groundY); ctx.stroke();
+
+    // Vẽ vật thể
+    map.forEach(obj => {
+        let ox = obj.x - cameraX + player.x;
+        if (ox < -100 || ox > canvas.width) return;
+        if (obj.t === 's') {
+            ctx.fillStyle = "#fff";
+            ctx.beginPath(); ctx.moveTo(ox, groundY); ctx.lineTo(ox+25, groundY-45); ctx.lineTo(ox+50, groundY); ctx.fill();
+        } else {
+            let oy = obj.h ? groundY - obj.h : groundY;
+            ctx.fillStyle = "#0f3460"; ctx.fillRect(ox, oy-60, 60, 60);
+            ctx.strokeStyle = "#4ecca3"; ctx.strokeRect(ox+5, oy-55, 50, 50);
+        }
+    });
+
+    // VẼ VẠCH ĐÍCH (Finish Line)
+    let finishX = levelLength - cameraX + player.x;
+    if (finishX < canvas.width) {
+        ctx.fillStyle = "#ffee00";
+        ctx.fillRect(finishX, groundY - 200, 15, 200); // Cột cờ vàng
+        ctx.fillStyle = "white";
+        ctx.font = "bold 20px Arial";
+        ctx.fillText("FINISH", finishX - 20, groundY - 220);
+    }
+
+    // Vẽ Player
+    ctx.save();
+    ctx.translate(player.x + 25, player.y + 25);
+    ctx.rotate(player.rotation * Math.PI / 180);
+    ctx.fillStyle = "#ffff00";
+    ctx.fillRect(-25, -25, 50, 50);
+    ctx.strokeStyle = "black"; ctx.lineWidth = 4;
+    ctx.strokeRect(-20, -20, 40, 40);
+    ctx.restore();
+}
+
+function loop() { update(); draw(); requestAnimationFrame(loop); }
+
+window.addEventListener("mousedown", () => isInputActive = true);
+window.addEventListener("mouseup", () => isInputActive = false);
+window.addEventListener("touchstart", (e) => { e.preventDefault(); isInputActive = true; }, {passive: false});
+window.addEventListener("touchend", () => isInputActive = false);
+window.addEventListener("keydown", (e) => { if (e.code === "Space") isInputActive = true; });
+window.addEventListener("keyup", (e) => { if (e.code === "Space") isInputActive = false; });
+
+loop();
+</script>
+</body>
+</html>
