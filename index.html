@@ -23,7 +23,21 @@ header {
   position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 .logo { font-size: 28px; font-weight: 800; background: linear-gradient(90deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.search-box input { padding: 10px 20px; width: 250px; border-radius: 25px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.05); color: white; outline: none; }
+
+/* Bảng điểm ⭐ */
+.score-display {
+    background: rgba(0, 245, 255, 0.1);
+    padding: 8px 20px;
+    border-radius: 50px;
+    border: 1px solid var(--primary);
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 0 15px rgba(0, 245, 255, 0.2);
+}
+
+.search-box input { padding: 10px 20px; width: 200px; border-radius: 25px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.05); color: white; outline: none; }
 .hero { text-align: center; padding: 60px 20px; }
 .container { max-width: 1200px; margin: 0 auto; padding: 0 40px 100px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
 .game-card {
@@ -44,12 +58,17 @@ footer { text-align: center; padding: 40px; opacity: 0.5; font-size: 14px; }
 <body>
 <header>
   <div class="logo">🎮 HP GAME</div>
-  <div class="search-box"><input type="text" placeholder="Tìm kiếm trò chơi..." id="searchInput"></div>
+  <div style="display: flex; align-items: center; gap: 20px;">
+    <div class="score-display">⭐ <span id="totalScore">0</span></div>
+    <div class="search-box"><input type="text" placeholder="Tìm kiếm..." id="searchInput"></div>
+  </div>
 </header>
+
 <section class="hero">
   <h1>Level Up Your Fun!</h1>
   <p>Kho tàng mini game cực đỉnh của HP Studio.</p>
 </section>
+
 <div class="container" id="gameGrid">
   <div class="game-card" onclick="playGame('rankdash.html')">
     <span class="badge badge-hot">Hot</span>
@@ -57,28 +76,55 @@ footer { text-align: center; padding: 40px; opacity: 0.5; font-size: 14px; }
     <div class="game-title">Rank Dash</div>
     <div class="game-desc">Vượt chướng ngại vật cực nhanh!</div>
   </div>
+
   <div class="game-card" onclick="playGame('lineline.html')">
     <span class="badge badge-new">New</span>
     <div class="game-icon">💣</div>
     <div class="game-title">Dò Mìn</div>
     <div class="game-desc">Tìm bom và thử thách trí tuệ.</div>
   </div>
+
+  <div class="game-card" onclick="playGame('neon-bird.html')">
+    <span class="badge badge-new">New</span>
+    <div class="game-icon">🐦</div>
+    <div class="game-title">Neon Bird</div>
+    <div class="game-desc">Chinh phục 999đ để nhận thưởng ⭐</div>
+  </div>
+
   <div class="game-card" onclick="comingSoon('Rắn Săn Mồi')">
     <div class="game-icon">🐍</div>
     <div class="game-title">Rắn Săn Mồi</div>
     <div class="game-desc">Sắp ra mắt...</div>
   </div>
 </div>
+
 <div id="toast"></div>
 <footer><p>© 2026 HP Game Studio | Designed with ❤️</p></footer>
+
 <script>
+  function updateScore() {
+    const score = localStorage.getItem('hp_game_points') || 0;
+    document.getElementById('totalScore').innerText = score;
+  }
+
   function playGame(url) { window.location.href = url; }
+  
   function comingSoon(name) {
     const t = document.getElementById('toast');
     t.innerText = "🎮 Game " + name + " đang phát triển!";
     t.style.display = 'block';
     setTimeout(() => t.style.display = 'none', 2000);
   }
+
+  document.getElementById('searchInput').addEventListener('input', function(e) {
+    const term = e.target.value.toLowerCase();
+    document.querySelectorAll('.game-card').forEach(card => {
+      const title = card.querySelector('.game-title').innerText.toLowerCase();
+      card.style.display = title.includes(term) ? 'block' : 'none';
+    });
+  });
+
+  window.onload = updateScore;
 </script>
 </body>
 </html>
