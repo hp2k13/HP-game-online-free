@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Bird | HP Game</title>
+    <style>
+        :root { --primary: #00f5ff; --secondary: #ff00c8; --bg: #050510; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg); display: flex; flex-direction: column;
+            align-items: center; min-height: 100vh; font-family: 'Segoe UI', sans-serif;
+            color: white; padding: 20px; overflow: hidden;
+        }
+
+        /* Nút X quay lại giống Minesweeper */
+        .home-btn {
+            position: fixed; top: 20px; left: 20px;
+            width: 45px; height: 45px; display: flex;
+            align-items: center; justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            color: white; text-decoration: none; border-radius: 50%;
+            font-weight: bold; z-index: 1000; border: 1px solid #fff;
+            transition: 0.3s; font-family: sans-serif;
+        }
+        .home-btn:hover { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 15px var(--primary); }
+
+        .game-wrapper { position: relative; width: 100%; max-width: 800px; aspect-ratio: 16 / 9; margin: auto; }
+        canvas {
+            width: 100%; height: 100%; display: block; border: 2px solid var(--primary);
+            border-radius: 12px; background: #0a0a1a; box-shadow: 0 0 20px rgba(0, 245, 255, 0.15);
+        }
+        .ui-panel {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            text-align: center; pointer-events: none; z-index: 10;
+        }
+        .score { font-size: clamp(30px, 8vw, 60px); font-weight: 900; color: var(--secondary); text-shadow: 0 0 15px var(--secondary); }
+        
+        /* Ending Screen */
+        #ending {
+            display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.95);
+            flex-direction: column; align-items: center; justify-content: center;
+            border-radius: 12px; z-index: 100; text-align: center; padding: 20px;
+        }
+        .win-text { font-size: 40px; color: gold; text-shadow: 0 0 20px orange; margin-bottom: 10px; font-weight: 800; }
+        .win-sub { color: white; font-size: 18px; margin-bottom: 30px; }
+        .btn-restart { padding: 12px 35px; background: var(--primary); color: #000; text-decoration: none; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-restart:hover { box-shadow: 0 0 20px var(--primary); transform: scale(1.05); }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="home-btn">X</a>
+
+    <div class="game-wrapper">
+        <div id="ending">
+            <h2 class="win-text">🏆 HUYỀN THOẠI HP GAME</h2>
+            <p class="win-sub">Bạn đã đạt 999 điểm và nhận được 1 điểm ⭐ danh dự!</p>
+            <a href="index.html" class="btn-restart">QUAY LẠI TRANG CHỦ</a>
+        </div>
+
+        <div class="ui-panel">
+            <div class="score" id="score">0</div>
+            <div id="hint" style="color: var(--primary); font-weight: bold;">CHẠM ĐỂ BAY</div>
+        </div>
+        <canvas id="game"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const endingEl = document.getElementById('ending');
+
+        canvas.width = 800; canvas.height = 450;
+
+        // VẬT LÝ DỄ (EASY MODE)
+        let bird = { x: 100, y: 225, w: 40, h: 30, v: 0, gravity: 0.22, jump: -5.5 };
+        let pipes = [];
+        let score = 0;
+        let gameStarted = false;
+        let frame = 0;
+        let isWin = false;
+
+        function createPipe() {
+            let gap = 185; // Khe hở rộng
+            let h = Math.random() * (canvas.height - gap - 100) + 50;
+            pipes.push({ x: canvas.width, y: 0, w: 70, h: h, type: 'top', passed: false });
+            pipes.push({ x: canvas.width, y: h + gap, w: 70, h: canvas.height - h - gap, type: 'bottom' });
+        }
+
+        function draw() {
+            if (isWin) return;
+            ctx.fillStyle = '#0a0a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (gameStarted) {
+                bird.v += bird.gravity;
+                bird.y += bird.v;
+                if (frame % 110 === 0) createPipe();
+                frame++;
+            }
+
+            // Chim Neon
+            ctx.shadowBlur = 15; ctx.shadowColor = '#ff00c8';
+            ctx.fillStyle = '#ff00c8';
+            ctx.fillRect(bird.x, bird.y, bird.w, bird.h);
+
+            // Ống Neon
+            ctx.shadowBlur = 10; ctx.shadowColor = '#00f5ff';
+            ctx.fillStyle = '#00f5ff';
+            pipes.forEach(p => {
+                if (gameStarted) p.x -= 3.5;
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+
+                if (bird.x < p.x + p.w && bird.x + bird.w > p.x && bird.y < p.y + p.h && bird.y + bird.h > p.y) reset();
+
+                if (!p.passed && p.type === 'top' && bird.x > p.x + p.w) {
+                    score++;
+                    p.passed = true;
+                    scoreEl.innerText = score;
+                    if (score >= 999) triggerWin();
+                }
+            });
+
+            pipes = pipes.filter(p => p.x > -100);
+            if (bird.y > canvas.height || bird.y < 0) reset();
+            requestAnimationFrame(draw);
+        }
+
+        function triggerWin() {
+            isWin = true;
+            endingEl.style.display = 'flex';
+            
+            // CỘNG ĐIỂM ⭐ VÀO LOCALSTORAGE
+            let total = parseInt(localStorage.getItem('hp_game_points')) || 0;
+            localStorage.setItem('hp_game_points', total + 1);
+        }
+
+        function reset() {
+            bird.y = 225; bird.v = 0; pipes = []; score = 0; frame = 0;
+            gameStarted = false; scoreEl.innerText = score;
+            document.getElementById('hint').innerText = "THỬ LẠI NÀO!";
+        }
+
+        function action() {
+            if (isWin) return;
+            if (!gameStarted) { gameStarted = true; document.getElementById('hint').innerText = ""; }
+            bird.v = bird.jump;
+        }
+
+        window.addEventListener('keydown', e => { if(e.code === 'Space') action(); });
+        canvas.addEventListener('mousedown', action);
+        canvas.addEventListener('touchstart', e => { e.preventDefault(); action(); });
+        draw();
+    </script>
+</body>
+</html>
