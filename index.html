@@ -1,130 +1,277 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HP Game | Thế Giới Mini Game</title>
-<style>
-:root {
-  --primary: #00f5ff;
-  --secondary: #ff00c8;
-  --bg: #050510;
-  --card-bg: rgba(255, 255, 255, 0.05);
-}
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-body {
-  background: var(--bg);
-  background-image: radial-gradient(circle at 20% 30%, rgba(0, 245, 255, 0.05) 0%, transparent 40%);
-  color: white; min-height: 100vh; overflow-x: hidden;
-}
-header {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 20px 8%; background: rgba(10, 10, 25, 0.8); backdrop-filter: blur(15px);
-  position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-.logo { font-size: 28px; font-weight: 800; background: linear-gradient(90deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HP Game | Futuristic Mini Games</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00f5ff;
+            --secondary: #ff00c8;
+            --accent: #7d2ae8;
+            --bg: #02020a;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+        }
 
-/* Bảng điểm ⭐ */
-.score-display {
-    background: rgba(0, 245, 255, 0.1);
-    padding: 8px 20px;
-    border-radius: 50px;
-    border: 1px solid var(--primary);
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 0 15px rgba(0, 245, 255, 0.2);
-}
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
 
-.search-box input { padding: 10px 20px; width: 200px; border-radius: 25px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.05); color: white; outline: none; }
-.hero { text-align: center; padding: 60px 20px; }
-.container { max-width: 1200px; margin: 0 auto; padding: 0 40px 100px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
-.game-card {
-  background: var(--card-bg); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px;
-  padding: 40px 30px; text-align: center; position: relative; transition: 0.4s; cursor: pointer;
-}
-.game-card:hover { transform: translateY(-10px); border-color: var(--primary); box-shadow: 0 0 20px rgba(0, 245, 255, 0.2); }
-.game-icon { font-size: 60px; margin-bottom: 20px; display: block; }
-.game-title { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
-.game-desc { font-size: 14px; color: rgba(255, 255, 255, 0.5); }
-.badge { position: absolute; top: 15px; right: 15px; padding: 5px 12px; border-radius: 12px; font-size: 11px; font-weight: bold; }
-.badge-hot { background: #ff4757; }
-.badge-new { background: #2ed573; }
-#toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: white; color: #333; padding: 12px 25px; border-radius: 50px; display: none; font-weight: bold; }
-footer { text-align: center; padding: 40px; opacity: 0.5; font-size: 14px; }
-</style>
+        body {
+            background: var(--bg);
+            color: white;
+            min-height: 100vh;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(125, 42, 232, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(0, 245, 255, 0.15) 0%, transparent 40%);
+        }
+
+        #canvas-bg { position: fixed; top: 0; left: 0; z-index: -1; width: 100%; height: 100%; pointer-events: none; }
+
+        header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 60px 20px 20px;
+            gap: 40px;
+        }
+
+        /* Glitch Logo Effect */
+        .logo { 
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(40px, 10vw, 75px);
+            font-weight: 900; 
+            letter-spacing: 8px;
+            position: relative;
+            text-transform: uppercase;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .logo::before, .logo::after {
+            content: 'HP GAME';
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg);
+        }
+
+        .logo::before { left: 2px; text-shadow: -2px 0 var(--secondary); clip: rect(44px, 450px, 56px, 0); animation: glitch-1 5s infinite linear alternate-reverse; }
+        .logo::after { left: -2px; text-shadow: -2px 0 var(--primary); clip: rect(44px, 450px, 56px, 0); animation: glitch-2 5s infinite linear alternate-reverse; }
+
+        @keyframes glitch-1 {
+            0% { clip: rect(10px, 9999px, 9px, 0); }
+            20% { clip: rect(85px, 9999px, 5px, 0); }
+            40% { clip: rect(12px, 9999px, 88px, 0); }
+            100% { clip: rect(40px, 9999px, 20px, 0); }
+        }
+
+        @keyframes glitch-2 {
+            0% { clip: rect(54px, 9999px, 34px, 0); }
+            30% { clip: rect(12px, 9999px, 98px, 0); }
+            100% { clip: rect(90px, 9999px, 12px, 0); }
+        }
+
+        /* Search Box */
+        .search-wrapper { width: 100%; max-width: 450px; }
+        .search-box input {
+            width: 100%;
+            padding: 15px 25px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            background: var(--glass);
+            color: white;
+            outline: none;
+            backdrop-filter: blur(20px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+            font-size: 16px;
+        }
+        .search-box input:focus { border-color: var(--primary); transform: scale(1.05); box-shadow: 0 0 30px rgba(0, 245, 255, 0.2); }
+
+        /* Grid */
+        .container {
+            max-width: 1200px; margin: 40px auto;
+            padding: 0 25px 100px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 35px;
+        }
+
+        /* Game Card */
+        .game-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 32px;
+            padding: 50px 30px;
+            text-align: center;
+            position: relative;
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .game-card:hover {
+            transform: translateY(-15px);
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-icon { font-size: 65px; margin-bottom: 25px; display: block; transition: 0.4s; }
+        .game-card:hover .game-icon { transform: scale(1.2) rotate(8deg); }
+        .game-title { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+        .game-desc { font-size: 14px; color: rgba(255, 255, 255, 0.5); line-height: 1.5; }
+
+        .badge {
+            position: absolute; top: 20px; right: 20px;
+            padding: 6px 15px; border-radius: 12px;
+            font-size: 11px; font-weight: 900;
+        }
+        .badge-hot { background: var(--secondary); box-shadow: 0 0 15px var(--secondary); }
+        .badge-new { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
+
+        #toast {
+            position: fixed; top: 30px; right: 30px;
+            background: white; color: black; padding: 18px 35px;
+            border-radius: 20px; font-weight: 800; display: none;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4); z-index: 1000;
+        }
+
+        footer { text-align: center; padding: 100px 20px; opacity: 0.4; font-size: 12px; letter-spacing: 3px; }
+
+        @media (max-width: 600px) { .container { grid-template-columns: 1fr; } }
+    </style>
 </head>
 <body>
+
+<canvas id="canvas-bg"></canvas>
+
 <header>
-  <div class="logo">🎮 HP GAME</div>
-  <div style="display: flex; align-items: center; gap: 20px;">
-    <div class="score-display">⭐ <span id="totalScore">0</span></div>
-    <div class="search-box"><input type="text" placeholder="Tìm kiếm..." id="searchInput"></div>
-  </div>
+    <div class="logo" onclick="location.reload()">HP GAME</div>
+    <div class="search-wrapper">
+        <div class="search-box">
+            <input type="text" placeholder="Gõ tên game bạn muốn chơi..." id="searchInput">
+        </div>
+    </div>
 </header>
 
-<section class="hero">
-  <h1>Level Up Your Fun!</h1>
-  <p>Kho tàng mini game cực đỉnh của HP Studio.</p>
-</section>
-
 <div class="container" id="gameGrid">
-  <div class="game-card" onclick="playGame('rankdash.html')">
-    <span class="badge badge-hot">Hot</span>
-    <div class="game-icon">🟥</div>
-    <div class="game-title">Rank Dash</div>
-    <div class="game-desc">Vượt chướng ngại vật cực nhanh!</div>
-  </div>
+    <div class="game-card" style="animation-delay: 0.1s" onclick="playGame('rankdash.html')">
+        <span class="badge badge-hot">HOT</span>
+        <div class="game-icon">🚀</div>
+        <div class="game-title">Rank Dash</div>
+        <div class="game-desc">Vượt chướng ngại vật với tốc độ ánh sáng.</div>
+    </div>
 
-  <div class="game-card" onclick="playGame('lineline.html')">
-    <span class="badge badge-new">New</span>
-    <div class="game-icon">💣</div>
-    <div class="game-title">Dò Mìn</div>
-    <div class="game-desc">Tìm bom và thử thách trí tuệ.</div>
-  </div>
+    <div class="game-card" style="animation-delay: 0.2s" onclick="playGame('lineline.html')">
+        <span class="badge badge-new">NEW</span>
+        <div class="game-icon">💎</div>
+        <div class="game-title">Dò Mìn Pro</div>
+        <div class="game-desc">Thử thách trí tuệ với phong cách Cyberpunk.</div>
+    </div>
 
-  <div class="game-card" onclick="playGame('neon-bird.html')">
-    <span class="badge badge-new">New</span>
-    <div class="game-icon">🐦</div>
-    <div class="game-title">Neon Bird</div>
-    <div class="game-desc">Chinh phục 999đ để nhận thưởng ⭐</div>
-  </div>
+    <div class="game-card" style="animation-delay: 0.3s" onclick="playGame('neon-bird.html')">
+        <span class="badge badge-new">NEW</span>
+        <div class="game-icon">⚡</div>
+        <div class="game-title">Neon Bird</div>
+        <div class="game-desc">Bay lượn qua những cột sáng Neon rực rỡ.</div>
+    </div>
 
-  <div class="game-card" onclick="comingSoon('Rắn Săn Mồi')">
-    <div class="game-icon">🐍</div>
-    <div class="game-title">Rắn Săn Mồi</div>
-    <div class="game-desc">Sắp ra mắt...</div>
-  </div>
+    <div class="game-card" style="opacity: 0.6; animation-delay: 0.4s" onclick="comingSoon('Rắn Săn Mồi')">
+        <div class="game-icon">🐍</div>
+        <div class="game-title">Rắn Săn Mồi</div>
+        <div class="game-desc">Phiên bản Multiplayer đang được phát triển.</div>
+    </div>
 </div>
 
 <div id="toast"></div>
-<footer><p>© 2026 HP Game Studio | Designed with ❤️</p></footer>
+
+<footer>
+    <p>© 2026 HP STUDIO • BEYOND THE LIMITS</p>
+</footer>
 
 <script>
-  function updateScore() {
-    const score = localStorage.getItem('hp_game_points') || 0;
-    document.getElementById('totalScore').innerText = score;
-  }
+    // Particle Background
+    const canvas = document.getElementById('canvas-bg');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
 
-  function playGame(url) { window.location.href = url; }
-  
-  function comingSoon(name) {
-    const t = document.getElementById('toast');
-    t.innerText = "🎮 Game " + name + " đang phát triển!";
-    t.style.display = 'block';
-    setTimeout(() => t.style.display = 'none', 2000);
-  }
+    function initCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
 
-  document.getElementById('searchInput').addEventListener('input', function(e) {
-    const term = e.target.value.toLowerCase();
-    document.querySelectorAll('.game-card').forEach(card => {
-      const title = card.querySelector('.game-title').innerText.toLowerCase();
-      card.style.display = title.includes(term) ? 'block' : 'none';
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.size = Math.random() * 1.5;
+            this.speedX = Math.random() * 0.4 - 0.2;
+            this.speedY = Math.random() * 0.4 - 0.2;
+        }
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            if (this.x > canvas.width) this.x = 0; else if (this.x < 0) this.x = canvas.width;
+            if (this.y > canvas.height) this.y = 0; else if (this.y < 0) this.y = canvas.height;
+        }
+        draw() {
+            ctx.fillStyle = "rgba(0, 245, 255, 0.4)";
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    function setup() {
+        particles = [];
+        for (let i = 0; i < 80; i++) particles.push(new Particle());
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('resize', () => { initCanvas(); setup(); });
+    initCanvas(); setup(); animate();
+
+    // App Logic
+    function playGame(url) {
+        document.body.style.opacity = '0';
+        document.body.style.transition = '0.5s';
+        setTimeout(() => window.location.href = url, 500);
+    }
+    
+    function comingSoon(name) {
+        const t = document.getElementById('toast');
+        t.innerText = "🚀 " + name + " đang được nâng cấp!";
+        t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 3000);
+    }
+
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll('.game-card').forEach(card => {
+            const title = card.querySelector('.game-title').innerText.toLowerCase();
+            card.style.display = title.includes(term) ? 'block' : 'none';
+        });
     });
-  });
-
-  window.onload = updateScore;
 </script>
 </body>
 </html>
