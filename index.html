@@ -104,7 +104,6 @@
             backdrop-filter: blur(10px);
             cursor: pointer;
         }
-        /* UPGRADE: Hover effect Glow */
         .game-card:hover { 
             transform: translateY(-10px) scale(1.02); 
             border-color: var(--primary); 
@@ -145,6 +144,13 @@
 </header>
 
 <div class="container" id="gameGrid">
+    <div class="game-card" onclick="playGame('scratch-king.html')">
+        <span class="badge badge-sim" data-key="sim">SIM</span>
+        <div class="game-icon">💰</div>
+        <div class="game-title" data-key="t5">Scratch King</div>
+        <div class="game-desc" data-key="d5">Rise from rags to riches in the ultimate scratch simulator.</div>
+    </div>
+
     <div class="game-card" onclick="playGame('rankdash.html')">
         <span class="badge badge-hot" data-key="hot">HOT</span>
         <div class="game-icon">🚀</div>
@@ -178,14 +184,13 @@
 
 <script>
     const i18n = {
-        vi: { search: "Tìm kiếm trò chơi...", t1: "Rank Dash", d1: "Vượt chướng ngại vật với tốc độ ánh sáng.", t2: "Minesweeper Pro", d2: "Thử thách logic trong thế giới Cyberpunk.", t3: "Neon Bird", d3: "Bay qua các cột năng lượng neon.", t4: "Cyber Hacker", d4: "Trở thành huyền thoại thế giới ngầm kỹ thuật số.", hot: "HOT", new: "MỚI", sim: "MÔ PHỎNG" },
-        en: { search: "Search games...", t1: "Rank Dash", d1: "Dash through obstacles with light speed.", t2: "Minesweeper Pro", d2: "Test your logic in a Cyberpunk world.", t3: "Neon Bird", d3: "Fly through radiant neon energy pillars.", t4: "Cyber Hacker", d4: "Become a legend in the digital underworld.", hot: "HOT", new: "NEW", sim: "SIM" },
-        zh: { search: "搜索游戏...", t1: "竞速冲刺", d1: "以光速冲破障碍。", t2: "扫雷专业版", d2: "在赛博朋克世界测试你的逻辑。", t3: "霓虹鸟", d3: "飞越灿烂的霓虹能量柱。", t4: "网络黑客", d4: "成为数字地下世界的传奇。", hot: "热门", new: "新品", sim: "模拟" },
-        ja: { search: "ゲームを検索...", t1: "ランクダッシュ", d1: "光速で障害物を駆け抜けろ。", t2: "マインスイーパープロ", d2: "サイバーパンクな世界で論理を試そう。", t3: "ネオンバード", d3: "輝くネオンの柱を通り抜けろ。", t4: "サイバーハッカー", d4: "デジタル裏社会の伝説になれ。", hot: "人気", new: "新作", sim: "シム" },
-        ko: { search: "게임 검색...", t1: "랭크 대시", d1: "광속으로 장애물을 돌파하세요.", t2: "지뢰찾기 프로", d2: "사이버펑크 세계에서 논리를 테스트하세요.", t3: "네온 버드", d3: "빛나는 네온 기둥 사이를 날아보세요.", t4: "사이버 해커", d4: "디지털 지하 세계의 전설이 되십시오.", hot: "인기", new: "신규", sim: "시뮬" }
+        vi: { search: "Tìm kiếm trò chơi...", t1: "Rank Dash", d1: "Vượt chướng ngại vật với tốc độ ánh sáng.", t2: "Minesweeper Pro", d2: "Thử thách logic trong thế giới Cyberpunk.", t3: "Neon Bird", d3: "Bay qua các cột năng lượng neon.", t4: "Cyber Hacker", d4: "Trở thành huyền thoại thế giới ngầm kỹ thuật số.", t5: "Scratch King", d5: "Từ kẻ vô gia cư trở thành tỷ phú trong giả lập cào thẻ đỉnh cao.", hot: "HOT", new: "MỚI", sim: "MÔ PHỎNG" },
+        en: { search: "Search games...", t1: "Rank Dash", d1: "Dash through obstacles with light speed.", t2: "Minesweeper Pro", d2: "Test your logic in a Cyberpunk world.", t3: "Neon Bird", d3: "Fly through radiant neon energy pillars.", t4: "Cyber Hacker", d4: "Become a legend in the digital underworld.", t5: "Scratch King", d5: "Rise from rags to riches in the ultimate scratch simulator.", hot: "HOT", new: "NEW", sim: "SIM" },
+        zh: { search: "搜索游戏...", t1: "竞速冲刺", d1: "以光速冲破障碍。", t2: "扫雷专业版", d2: "在赛博朋克世界测试你的逻辑。", t3: "霓虹鸟", d3: "飞越灿烂的霓虹能量柱。", t4: "网络黑客", d4: "成为数字地下世界的传奇。", t5: "刮刮乐之王", d5: "在终极刮刮乐模拟器中从赤贫致富。", hot: "热门", new: "新品", sim: "模拟" },
+        ja: { search: "ゲームを検索...", t1: "ランクダッシュ", d1: "光速で障害物を駆け抜けろ。", t2: "マインスイーパープロ", d2: "サイバーパンクな世界で論理を試そう。", t3: "ネオンバード", d3: "輝くネオンの柱を通り抜けろ。", t4: "サイバーハッカー", d4: "デジタル裏社会の伝説になれ。", t5: "スクラッチ・キング", d5: "究極のスクラッチシミュレーターで、無一文から富豪へ成り上がれ。", hot: "人気", new: "新作", sim: "シム" },
+        ko: { search: "게임 검색...", t1: "랭크 대시", d1: "광속으로 장애물을 돌파하세요.", t2: "지뢰찾기 프로", d2: "사이버펑크 세계에서 논리를 테스트하세요.", t3: "네온 버드", d3: "빛나는 네온 기둥 사이를 날아보세요.", t4: "사이버 해커", d4: "디지털 지하 세계의 전설이 되십시오.", t5: "스크래치 킹", d5: "궁극의 스크래치 시뮬레이터에서 빈민에서 부자로 거듭나세요.", hot: "인기", new: "신규", sim: "시뮬" }
     };
 
-    // UPGRADE 1: Search Logic
     document.getElementById('searchInput').addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
         document.querySelectorAll('.game-card').forEach(card => {
@@ -206,21 +211,14 @@
         });
     }
 
-    // UPGRADE 2: Interactive Canvas
+    // Interactive Canvas Background
     const canvas = document.getElementById('canvas-bg');
     const ctx = canvas.getContext('2d');
     let particles = [];
     const mouse = { x: null, y: null, radius: 100 };
 
-    window.addEventListener('mousemove', (e) => {
-        mouse.x = e.x;
-        mouse.y = e.y;
-    });
-
-    function initCanvas() { 
-        canvas.width = window.innerWidth; 
-        canvas.height = window.innerHeight; 
-    }
+    window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; });
+    function initCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 
     class Particle {
         constructor() {
@@ -231,34 +229,19 @@
             this.baseY = this.y;
             this.density = (Math.random() * 30) + 1;
         }
-
         update() {
-            // Interaction logic
             let dx = mouse.x - this.x;
             let dy = mouse.y - this.y;
             let distance = Math.sqrt(dx * dx + dy * dy);
-            let forceDirectionX = dx / distance;
-            let forceDirectionY = dy / distance;
-            let maxDistance = mouse.radius;
-            let force = (maxDistance - distance) / maxDistance;
-            let directionX = forceDirectionX * force * this.density;
-            let directionY = forceDirectionY * force * this.density;
-
             if (distance < mouse.radius) {
-                this.x -= directionX;
-                this.y -= directionY;
+                let force = (mouse.radius - distance) / mouse.radius;
+                this.x -= (dx / distance) * force * this.density;
+                this.y -= (dy / distance) * force * this.density;
             } else {
-                if (this.x !== this.baseX) {
-                    let dx = this.x - this.baseX;
-                    this.x -= dx / 10;
-                }
-                if (this.y !== this.baseY) {
-                    let dy = this.y - this.baseY;
-                    this.y -= dy / 10;
-                }
+                if (this.x !== this.baseX) this.x -= (this.x - this.baseX) / 10;
+                if (this.y !== this.baseY) this.y -= (this.y - this.baseY) / 10;
             }
         }
-
         draw() {
             ctx.fillStyle = "rgba(0, 245, 255, 0.5)";
             ctx.beginPath();
@@ -269,17 +252,12 @@
 
     function setup() {
         particles = [];
-        for (let i = 0; i < 100; i++) {
-            particles.push(new Particle());
-        }
+        for (let i = 0; i < 100; i++) particles.push(new Particle());
     }
 
     function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => {
-            p.update();
-            p.draw();
-        });
+        particles.forEach(p => { p.update(); p.draw(); });
         requestAnimationFrame(animate);
     }
     
