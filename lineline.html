@@ -3,61 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
-    <title>HP Game | Minesweeper Fixed</title>
+    <title>HP Game | Cyber Minesweeper</title>
     <style>
         :root {
             --primary: #00f5ff;
+            --secondary: #ff00c8;
             --danger: #ff4757;
-            --cell-size: 35px;
+            --bg: #050510;
+            --cell-size: 38px;
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            margin: 0; padding: 0; overflow: hidden; 
-            background: #0a0a1a; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            user-select: none; -webkit-user-select: none;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
+            background: var(--bg);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
         }
+
+        /* NÚT X STYLE RANK DASH */
         .home-btn {
             position: fixed; top: 20px; left: 20px;
-            padding: 10px 20px; background: rgba(255, 255, 255, 0.1);
+            padding: 12px 25px; background: rgba(0, 0, 0, 0.5);
             color: white; text-decoration: none; border-radius: 30px;
-            font-weight: bold; z-index: 1000; border: 1px solid #fff;
+            font-weight: bold; z-index: 1000; border: 2px solid #fff;
+            transition: 0.3s; font-size: 14px;
+            display: flex; align-items: center; justify-content: center;
         }
+        .home-btn:hover { 
+            background: var(--danger); 
+            transform: scale(1.1); 
+            box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
+        }
+
+        /* THÔNG TIN LEVEL */
         .level-tag {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            padding: 8px 25px; background: rgba(0, 245, 255, 0.1);
-            border-radius: 20px; border: 1px solid var(--primary);
-            color: var(--primary); font-weight: bold; font-size: 18px;
+            padding: 10px 30px; background: rgba(0, 245, 255, 0.05);
+            border-radius: 50px; border: 1px solid var(--primary);
+            color: var(--primary); font-weight: 900; font-size: 20px;
+            letter-spacing: 2px; text-shadow: 0 0 10px var(--primary);
+            box-shadow: inset 0 0 15px rgba(0, 245, 255, 0.1);
         }
-        .controls { margin-bottom: 20px; display: flex; gap: 10px; }
+
+        /* ĐIỀU KHIỂN */
+        .controls { margin-bottom: 25px; display: flex; gap: 15px; }
         .mode-btn {
-            padding: 12px 25px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.1);
-            background: #1e1e30; color: white; cursor: pointer; font-weight: bold; transition: 0.2s;
+            padding: 14px 28px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05); color: white; cursor: pointer; 
+            font-weight: bold; transition: 0.3s; font-size: 16px;
         }
         .mode-btn.active {
-            background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary);
+            background: var(--primary); color: #000; 
+            box-shadow: 0 0 20px var(--primary); border-color: transparent;
         }
+
+        /* BÀN CỜ */
         .grid-container { 
-            padding: 10px; background: #161625; border-radius: 12px; border: 2px solid #2a2a40; 
+            padding: 12px; background: #0a0a1a; border-radius: 16px; 
+            border: 2px solid #1a1a30; box-shadow: 0 0 40px rgba(0,0,0,0.5);
         }
-        .grid { display: grid; gap: 4px; }
+        .grid { display: grid; gap: 5px; }
         .cell {
-            width: var(--cell-size); height: var(--cell-size); background: #2a2a40;
+            width: var(--cell-size); height: var(--cell-size); 
+            background: #1a1a2e; border: 1px solid #252545;
             display: flex; align-items: center; justify-content: center;
-            font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 16px; color: white;
+            font-weight: 900; cursor: pointer; border-radius: 6px; 
+            font-size: 18px; color: white; transition: 0.15s;
         }
-        .cell.revealed { background: #cbd5e0; color: #1a202c; cursor: default; }
-        .cell.mine { background: var(--danger) !important; }
+        .cell:hover:not(.revealed) { background: #252545; transform: scale(1.05); border-color: var(--primary); }
+        .cell.revealed { background: #e2e8f0; color: #1a202c; cursor: default; border-color: #cbd5e0; }
+        .cell.mine { 
+            background: var(--danger) !important; 
+            box-shadow: inset 0 0 15px #000; 
+            animation: shake 0.2s infinite;
+        }
+        .cell.flagged { color: var(--secondary); }
+
+        /* OVERLAYS (MENU) */
         .overlay {
             position: fixed; inset: 0; display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 100;
-            background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(10px); color: white;
+            background: rgba(5, 5, 16, 0.95); backdrop-filter: blur(15px); color: white;
+            text-align: center;
         }
+        .overlay h1 { font-size: 60px; font-weight: 900; margin-bottom: 10px; letter-spacing: -2px; }
         .hidden { display: none !important; }
+
         .btn-play {
-            padding: 15px 40px; background: #2ecc71; border: none; border-radius: 30px;
-            color: white; font-weight: bold; font-size: 20px; cursor: pointer; margin-top: 20px;
+            padding: 18px 50px; background: #2ecc71; border: none; border-radius: 50px;
+            color: white; font-weight: bold; font-size: 22px; cursor: pointer; 
+            margin-top: 30px; transition: 0.3s; box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
         }
-        @media (max-width: 600px) { :root { --cell-size: 30px; } }
+        .btn-play:hover { transform: scale(1.1); box-shadow: 0 0 25px #2ecc71; }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px); }
+            50% { transform: translate(-1px, -1px); }
+            100% { transform: translate(1px, -1px); }
+        }
+
+        @media (max-width: 600px) { :root { --cell-size: 32px; } .overlay h1 { font-size: 40px; } }
     </style>
 </head>
 <body>
@@ -66,24 +120,26 @@
     <div class="level-tag" id="lvlDisplay">LEVEL 1</div>
 
     <div id="mainMenu" class="overlay">
-        <h1>MINESWEEPER</h1>
-        <button class="btn-play" onclick="startGame(true)">START GAME</button>
+        <h1 style="color: var(--primary); text-shadow: 0 0 20px var(--primary);">MINESWEEPER</h1>
+        <p style="opacity: 0.6;">Find all safe tiles to advance</p>
+        <button class="btn-play" onclick="startGame(true)">START MISSION</button>
     </div>
 
     <div id="deathMenu" class="overlay hidden">
-        <h1 style="color: var(--danger)">GAME OVER</h1>
-        <p id="failLvl"></p>
-        <button class="btn-play" onclick="startGame(true)">RETRY</button>
+        <h1 style="color: var(--danger); text-shadow: 0 0 20px var(--danger);">CRITICAL ERROR</h1>
+        <p id="failLvl" style="font-size: 20px;"></p>
+        <button class="btn-play" style="background: var(--danger);" onclick="startGame(true)">REBOOT SYSTEM</button>
     </div>
 
     <div id="winMenu" class="overlay hidden">
-        <h1 style="color: #ffee00">VICTORY!</h1>
-        <button class="btn-play" onclick="startGame(false)">NEXT LEVEL</button>
+        <h1 style="color: #ffee00; text-shadow: 0 0 20px #ffee00;">SYSTEM CLEARED</h1>
+        <p style="font-size: 20px;">Moving to next sector...</p>
+        <button class="btn-play" onclick="startGame(false)">CONTINUE</button>
     </div>
 
     <div class="controls">
-        <div id="digMode" class="mode-btn active" onclick="setMode('dig')">⛏️ Dig</div>
-        <div id="flagMode" class="mode-btn" onclick="setMode('flag')">🚩 Flag</div>
+        <div id="digMode" class="mode-btn active" onclick="setMode('dig')">⛏️ DIG</div>
+        <div id="flagMode" class="mode-btn" onclick="setMode('flag')">🚩 FLAG</div>
     </div>
 
     <div class="grid-container">
@@ -138,7 +194,6 @@
             let bombCount = 0;
             while (bombCount < bombAmount) {
                 let random = Math.floor(Math.random() * squares.length);
-                // Không đặt bom vào ô click đầu tiên hoặc các ô xung quanh nó
                 let neighbors = getNeighborIndices(safeId);
                 if (random !== safeId && !neighbors.includes(random) && squares[random].dataset.type !== 'mine') {
                     squares[random].dataset.type = 'mine';
@@ -166,7 +221,6 @@
             return res;
         }
 
-        // Dùng vòng lặp thay cho đệ quy để tránh lỗi "Đỏ" (Stack Overflow)
         function revealCell(id) {
             if (isOver || squares[id].classList.contains('revealed') || squares[id].classList.contains('flagged')) return;
 
@@ -181,7 +235,6 @@
                 return;
             }
 
-            // Thuật toán loang dùng Stack (tránh lỗi đệ quy)
             let stack = [id];
             while (stack.length > 0) {
                 let currentId = stack.pop();
@@ -192,7 +245,7 @@
                 let count = parseInt(c.dataset.count);
                 if (count > 0) {
                     c.innerHTML = count;
-                    c.style.color = ['','#3498db','#2ecc71','#e74c3c','#9b59b6','#f1c40f','#e67e22','#1abc9c','#2c3e50'][count];
+                    c.style.color = ['','#3182ce','#38a169','#e53e3e','#805ad5','#d69e2e','#dd6b20','#319795','#2d3748'][count];
                 } else {
                     getNeighborIndices(currentId).forEach(nIdx => {
                         if (!squares[nIdx].classList.contains('revealed')) stack.push(nIdx);
@@ -209,8 +262,13 @@
 
         function gameOver() {
             isOver = true;
-            squares.forEach(s => { if(s.dataset.type === 'mine') { s.innerHTML = '💣'; s.classList.add('mine'); } });
-            document.getElementById('failLvl').innerText = "Level " + currentLevel;
+            squares.forEach(s => { 
+                if(s.dataset.type === 'mine') { 
+                    s.innerHTML = '💣'; 
+                    s.classList.add('mine'); 
+                } 
+            });
+            document.getElementById('failLvl').innerText = "Sector failed at Level " + currentLevel;
             setTimeout(() => document.getElementById('deathMenu').classList.remove('hidden'), 500);
         }
     </script>
