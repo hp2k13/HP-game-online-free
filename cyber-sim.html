@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Hacker | Hardcore Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Fira+Code:wght@300;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00f5ff; --secondary: #ff00c8; --bg: #05050a;
+            --danger: #ff4757; --panel: rgba(0, 15, 30, 0.9);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair; }
+        body { background: var(--bg); color: #e0e0e0; font-family: 'Fira Code', monospace; height: 100vh; overflow: hidden; display: flex; transition: filter 0.3s; }
+
+        #matrix-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.15; }
+
+        /* Sidebar */
+        #sidebar {
+            width: 350px; background: var(--panel); border-right: 1px solid var(--primary);
+            padding: 80px 20px 20px; display: flex; flex-direction: column; gap: 15px;
+            backdrop-filter: blur(20px); z-index: 1000;
+        }
+
+        .stat-card {
+            background: rgba(0, 245, 255, 0.03); padding: 15px; border-radius: 4px;
+            border-left: 4px solid var(--primary);
+        }
+        .stat-val { font-family: 'Orbitron'; font-size: 20px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .upgrade-card {
+            background: rgba(255, 255, 255, 0.02); padding: 15px; border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; transition: 0.3s;
+        }
+        .upgrade-card:hover { border-color: var(--primary); background: rgba(0, 245, 255, 0.05); }
+
+        /* Settings */
+        #settings-trigger {
+            position: fixed; bottom: 15px; right: 15px; width: 35px; height: 35px;
+            background: rgba(255,255,255,0.1); border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; z-index: 10001; cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.3); transition: 0.3s;
+        }
+        #settings-trigger:hover { transform: rotate(90deg); color: var(--primary); }
+
+        #settings-menu {
+            position: fixed; bottom: 60px; right: 15px; background: var(--panel);
+            border: 1px solid var(--primary); padding: 10px; border-radius: 8px;
+            display: none; flex-direction: column; gap: 8px; z-index: 10001;
+        }
+        .menu-btn { background: rgba(255,255,255,0.05); border: none; color: #fff; padding: 8px 15px; font-family: 'Orbitron'; font-size: 10px; cursor: pointer; text-align: left; }
+        .menu-btn:hover { background: var(--primary); color: #000; }
+
+        /* Ban Overlay */
+        #ban-overlay {
+            position: fixed; inset: 0; background: rgba(150, 0, 0, 0.95); z-index: 200000;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; font-family: 'Orbitron'; color: white;
+        }
+        .ban-title { font-size: 60px; font-weight: 900; text-shadow: 0 0 20px black; margin-bottom: 10px; }
+
+        /* Boss Mode */
+        #virus { width: 20px; height: 20px; background: var(--secondary); border-radius: 50%; position: absolute; display: none; z-index: 5000; pointer-events: none; box-shadow: 0 0 15px var(--secondary); }
+        .projectile { position: absolute; width: 12px; height: 12px; background: var(--danger); z-index: 4000; box-shadow: 0 0 10px var(--danger); border-radius: 2px; }
+
+        #win-overlay { position: fixed; inset: 0; background: #000; z-index: 100000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+
+        /* Workspace */
+        #terminal { flex: 1; padding: 20px; display: flex; flex-direction: column-reverse; overflow: hidden; }
+        #interact { height: 250px; border-top: 1px solid var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); }
+        .hack-orb { width: 140px; height: 140px; border-radius: 50%; border: 2px solid var(--primary); background: none; color: var(--primary); font-family: 'Orbitron'; font-weight: 900; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <canvas id="matrix-bg"></canvas>
+    <a href="index.html" style="position:fixed; top:20px; left:20px; z-index:10002; color:white; text-decoration:none; font-family:Orbitron; border:1px solid white; padding:10px; border-radius:100%">X</a>
+
+    <div id="ban-overlay">
+        <div class="ban-title">ACCESS BANNED</div>
+        <p style="letter-spacing: 5px;">IP TRACKED. DATA WIPED.</p>
+        <p id="ban-timer" style="margin-top: 30px; font-family: 'Fira Code';">Rebooting in 5s...</p>
+    </div>
+
+    <div id="settings-trigger" onclick="toggleMenu()">⚙</div>
+    <div id="settings-menu">
+        <button class="menu-btn" onclick="injectQA()">FORCE_INJECT: 1 QA</button>
+        <button class="menu-btn" style="color: #ff4757;" onclick="hardReset()">WIPE_ALL_DATA</button>
+    </div>
+
+    <div id="win-overlay">
+        <h1 style="font-family: Orbitron; color: var(--primary); font-size: 40px;">HACK COMPLETE</h1>
+        <button onclick="location.reload()" style="margin-top: 20px; background:none; border:1px solid #fff; color:#fff; padding:10px 30px; cursor:pointer;">REBOOT</button>
+    </div>
+
+    <div id="virus"></div>
+
+    <div id="sidebar">
+        <div class="stat-card">
+            <div style="font-size: 10px; color: var(--primary);">BALANCE</div>
+            <div class="stat-val" id="money-display">$ 0</div>
+        </div>
+        <div id="up-list">
+            <div class="upgrade-card" onclick="buy('cpu')">
+                <div style="font-family: Orbitron; font-size: 12px; color: var(--primary);">BOTNET</div>
+                <div style="font-size: 10px;">Lv: <span id="lv-cpu">0</span></div>
+                <div id="cost-cpu" style="color: var(--secondary);">Cost: 20$</div>
+            </div>
+            <div class="upgrade-card" onclick="buy('ram')" style="margin-top:10px;">
+                <div style="font-family: Orbitron; font-size: 12px; color: var(--primary);">QUANTUM</div>
+                <div style="font-size: 10px;">Lv: <span id="lv-ram">1</span></div>
+                <div id="cost-ram" style="color: var(--secondary);">Cost: 50$</div>
+            </div>
+        </div>
+        <button id="boss-btn" onclick="startBoss()" style="display:none; margin-top:20px; padding:12px; background:none; border:1px solid red; color:red; font-family:Orbitron; cursor:pointer;">BREACH FIREWALL</button>
+        <button id="kill-btn" onclick="win()" style="display:none; width:100%; padding:15px; background:var(--primary); color:black; font-family:Orbitron; border:none; margin-top:20px; cursor:pointer;">KILL_SYSTEM.EXE</button>
+    </div>
+
+    <div id="main" style="flex:1; display:flex; flex-direction:column;">
+        <div id="terminal"></div>
+        <div id="interact">
+            <button class="hack-orb" onclick="doHack()">DECRYPT</button>
+        </div>
+    </div>
+
+<script>
+    // Matrix & Logic
+    const cvs = document.getElementById('matrix-bg');
+    const c = cvs.getContext('2d');
+    cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+    const drops = Array(Math.floor(cvs.width/15)).fill(1);
+    function draw() {
+        c.fillStyle = "rgba(0,0,0,0.1)"; c.fillRect(0,0,cvs.width,cvs.height);
+        c.fillStyle = "#0f0"; c.font = "15px monospace";
+        drops.forEach((y, i) => {
+            c.fillText(Math.floor(Math.random()*2), i*15, y*15);
+            if(y*15 > cvs.height && Math.random() > 0.98) drops[i] = 0;
+            drops[i]++;
+        });
+    }
+    setInterval(draw, 50);
+
+    let money = 0, click = 1, auto = 0, levels = {cpu:0, ram:1}, costs = {cpu:20, ram:50}, bossActive = false;
+
+    function format(num) {
+        if (num >= 1e15) return (num / 1e15).toFixed(2) + " Qa";
+        if (num >= 1e9) return (num / 1e9).toFixed(1) + " B";
+        if (num >= 1e6) return (num / 1e6).toFixed(1) + " M";
+        return Math.floor(num).toLocaleString();
+    }
+
+    function toggleMenu() {
+        const m = document.getElementById('settings-menu');
+        m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    function injectQA() { money += 1e15; updateUI(); toggleMenu(); }
+
+    function hardReset() { localStorage.clear(); location.reload(); }
+
+    function updateUI() {
+        document.getElementById('money-display').innerText = "$ " + format(money);
+        document.getElementById('lv-cpu').innerText = levels.cpu;
+        document.getElementById('lv-ram').innerText = levels.ram;
+        document.getElementById('cost-cpu').innerText = levels.cpu >= 50 ? "MAX" : `Cost: ${format(costs.cpu)}$`;
+        document.getElementById('cost-ram').innerText = levels.ram >= 50 ? "MAX" : `Cost: ${format(costs.ram)}$`;
+        if(levels.cpu >= 50 && levels.ram >= 50 && !bossActive) document.getElementById('boss-btn').style.display = 'block';
+        if(!bossActive) localStorage.setItem('cyber_save_ban', JSON.stringify({money, levels, costs, click, auto}));
+    }
+
+    function doHack() { if(!bossActive) { money += click; updateUI(); } }
+
+    function buy(t) {
+        if(levels[t] < 50 && money >= costs[t] && !bossActive) {
+            money -= costs[t]; levels[t]++;
+            if(t === 'cpu') auto += 5; else click += 15;
+            costs[t] = Math.floor(costs[t] * 1.6); updateUI();
+        }
+    }
+
+    // Cơ chế BAN
+    function triggerBan() {
+        bossActive = false;
+        localStorage.clear();
+        document.getElementById('ban-overlay').style.display = 'flex';
+        let timeLeft = 5;
+        const timer = setInterval(() => {
+            timeLeft--;
+            document.getElementById('ban-timer').innerText = `Rebooting in ${timeLeft}s...`;
+            if(timeLeft <= 0) { clearInterval(timer); location.reload(); }
+        }, 1000);
+    }
+
+    function startBoss() {
+        bossActive = true; money = 0;
+        document.getElementById('boss-btn').style.display = 'none';
+        const v = document.getElementById('virus');
+        v.style.display = 'block';
+        document.onmousemove = (e) => {
+            v.style.left = (e.clientX - 10) + 'px';
+            v.style.top = (e.clientY - 10) + 'px';
+            checkCollision(e.clientX, e.clientY);
+        };
+        spawn();
+        setTimeout(() => { document.getElementById('kill-btn').style.display = 'block'; }, 10000);
+    }
+
+    function spawn() {
+        if(!bossActive) return;
+        const p = document.createElement('div');
+        p.className = 'projectile';
+        p.style.left = Math.random() * window.innerWidth + 'px';
+        p.style.top = '-20px';
+        document.body.appendChild(p);
+        let speed = 7 + Math.random() * 5;
+        let move = setInterval(() => {
+            let top = parseInt(p.style.top);
+            p.style.top = (top + speed) + 'px';
+            if(top > window.innerHeight || !bossActive) { clearInterval(move); p.remove(); }
+        }, 20);
+        setTimeout(spawn, 250);
+    }
+
+    function checkCollision(mx, my) {
+        document.querySelectorAll('.projectile').forEach(p => {
+            const r = p.getBoundingClientRect();
+            if(mx > r.left && mx < r.right && my > r.top && my < r.bottom) {
+                triggerBan();
+            }
+        });
+    }
+
+    function win() { bossActive = false; localStorage.clear(); document.getElementById('win-overlay').style.display = 'flex'; }
+
+    setInterval(() => { if(!bossActive && auto > 0) { money += auto; updateUI(); } }, 1000);
+    const s = localStorage.getItem('cyber_save_ban');
+    if(s) { Object.assign(window, JSON.parse(s)); updateUI(); }
+</script>
+</body>
+</html>

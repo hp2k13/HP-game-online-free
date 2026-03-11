@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HP Game | Futuristic Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00f5ff;
+            --secondary: #ff00c8;
+            --accent: #7d2ae8;
+            --bg: #02020a;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: var(--bg);
+            color: white;
+            min-height: 100vh;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(125, 42, 232, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(0, 245, 255, 0.15) 0%, transparent 40%);
+            transition: opacity 0.5s;
+        }
+
+        #canvas-bg { position: fixed; top: 0; left: 0; z-index: -1; width: 100%; height: 100%; pointer-events: none; }
+
+        header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 60px 20px 20px;
+            gap: 25px;
+        }
+
+        .logo { 
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(40px, 10vw, 75px);
+            font-weight: 900; 
+            letter-spacing: 8px;
+            position: relative;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+        .logo::before, .logo::after { content: 'HP GAME'; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); }
+        .logo::before { left: 2px; text-shadow: -2px 0 var(--secondary); clip: rect(44px, 450px, 56px, 0); animation: glitch-1 5s infinite linear alternate-reverse; }
+        .logo::after { left: -2px; text-shadow: -2px 0 var(--primary); clip: rect(44px, 450px, 56px, 0); animation: glitch-2 5s infinite linear alternate-reverse; }
+
+        @keyframes glitch-1 { 0% { clip: rect(10px, 9999px, 9px, 0); } 100% { clip: rect(40px, 9999px, 20px, 0); } }
+        @keyframes glitch-2 { 0% { clip: rect(54px, 9999px, 34px, 0); } 100% { clip: rect(90px, 9999px, 12px, 0); } }
+
+        .controls-wrapper { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 15px; }
+        
+        .search-box input {
+            width: 100%;
+            padding: 15px 25px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            background: var(--glass);
+            color: white;
+            outline: none;
+            backdrop-filter: blur(20px);
+            transition: 0.3s;
+            text-align: center;
+        }
+        .search-box input:focus { border-color: var(--primary); box-shadow: 0 0 20px rgba(0, 245, 255, 0.2); }
+
+        .lang-switcher { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+        .lang-btn {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            color: rgba(255,255,255,0.5);
+            padding: 5px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            transition: 0.3s;
+        }
+        .lang-btn:hover, .lang-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(0, 245, 255, 0.1); }
+
+        .container {
+            max-width: 1200px; margin: 20px auto 100px;
+            padding: 0 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 35px;
+        }
+
+        .game-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 32px;
+            padding: 50px 30px;
+            text-align: center;
+            position: relative;
+            transition: 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+        }
+        .game-card:hover { transform: translateY(-10px); border-color: var(--primary); background: rgba(255, 255, 255, 0.08); }
+
+        .game-icon { font-size: 60px; margin-bottom: 20px; display: block; }
+        .game-title { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+        .game-desc { font-size: 13px; color: rgba(255, 255, 255, 0.5); line-height: 1.5; }
+
+        .badge { position: absolute; top: 20px; right: 20px; padding: 5px 12px; border-radius: 10px; font-size: 10px; font-weight: 900; }
+        .badge-hot { background: var(--secondary); box-shadow: 0 0 10px var(--secondary); }
+        .badge-new { background: var(--primary); color: #000; box-shadow: 0 0 10px var(--primary); }
+        .badge-sim { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+        footer { text-align: center; padding-bottom: 50px; opacity: 0.3; font-size: 10px; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+
+<canvas id="canvas-bg"></canvas>
+
+<header>
+    <div class="logo" onclick="location.reload()">HP GAME</div>
+    <div class="controls-wrapper">
+        <div class="search-box">
+            <input type="text" placeholder="Search games..." id="searchInput">
+        </div>
+        <div class="lang-switcher">
+            <button class="lang-btn" data-lang="vi" onclick="setLanguage('vi')">VN</button>
+            <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+            <button class="lang-btn" data-lang="zh" onclick="setLanguage('zh')">CN</button>
+            <button class="lang-btn" data-lang="ja" onclick="setLanguage('ja')">JP</button>
+            <button class="lang-btn" data-lang="ko" onclick="setLanguage('ko')">KR</button>
+        </div>
+    </div>
+</header>
+
+<div class="container" id="gameGrid">
+    <div class="game-card" onclick="playGame('rankdash.html')">
+        <span class="badge badge-hot" data-key="hot">HOT</span>
+        <div class="game-icon">🚀</div>
+        <div class="game-title" data-key="t1">Rank Dash</div>
+        <div class="game-desc" data-key="d1">Dash through obstacles with light speed.</div>
+    </div>
+
+    <div class="game-card" onclick="playGame('lineline.html')">
+        <span class="badge badge-new" data-key="new">NEW</span>
+        <div class="game-icon">💎</div>
+        <div class="game-title" data-key="t2">Minesweeper Pro</div>
+        <div class="game-desc" data-key="d2">Test your logic in a Cyberpunk world.</div>
+    </div>
+
+    <div class="game-card" onclick="playGame('neon-bird.html')">
+        <span class="badge badge-new" data-key="new">NEW</span>
+        <div class="game-icon">⚡</div>
+        <div class="game-title" data-key="t3">Neon Bird</div>
+        <div class="game-desc" data-key="d3">Fly through radiant neon energy pillars.</div>
+    </div>
+
+    <div class="game-card" onclick="playGame('cyber-sim.html')">
+        <span class="badge badge-sim" data-key="sim">SIM</span>
+        <div class="game-icon">💻</div>
+        <div class="game-title" data-key="t4">Cyber Hacker</div>
+        <div class="game-desc" data-key="d4">Become a legend in the digital underworld.</div>
+    </div>
+</div>
+
+<footer><p>© 2026 HP STUDIO • BEYOND THE LIMITS</p></footer>
+
+<script>
+    const i18n = {
+        vi: { search: "Tìm kiếm trò chơi...", t1: "Rank Dash", d1: "Vượt chướng ngại vật với tốc độ ánh sáng.", t2: "Minesweeper Pro", d2: "Thử thách logic trong thế giới Cyberpunk.", t3: "Neon Bird", d3: "Bay qua các cột năng lượng neon.", t4: "Cyber Hacker", d4: "Trở thành huyền thoại thế giới ngầm kỹ thuật số.", hot: "HOT", new: "MỚI", sim: "MÔ PHỎNG" },
+        en: { search: "Search games...", t1: "Rank Dash", d1: "Dash through obstacles with light speed.", t2: "Minesweeper Pro", d2: "Test your logic in a Cyberpunk world.", t3: "Neon Bird", d3: "Fly through radiant neon energy pillars.", t4: "Cyber Hacker", d4: "Become a legend in the digital underworld.", hot: "HOT", new: "NEW", sim: "SIM" },
+        zh: { search: "搜索游戏...", t1: "竞速冲刺", d1: "以光速冲破障碍。", t2: "扫雷专业版", d2: "在赛博朋克世界测试你的逻辑。", t3: "霓虹鸟", d3: "飞越灿烂的霓虹能量柱。", t4: "网络黑客", d4: "成为数字地下世界的传奇。", hot: "热门", new: "新品", sim: "模拟" },
+        ja: { search: "ゲームを検索...", t1: "ランクダッシュ", d1: "光速で障害物を駆け抜けろ。", t2: "マインスイーパープロ", d2: "サイバーパンクな世界で論理を試そう。", t3: "ネオンバード", d3: "輝くネオンの柱を通り抜けろ。", t4: "サイバーハッカー", d4: "デジタル裏社会の伝説になれ。", hot: "人気", new: "新作", sim: "シム" },
+        ko: { search: "게임 검색...", t1: "랭크 대시", d1: "광속으로 장애물을 돌파하세요.", t2: "지뢰찾기 프로", d2: "사이버펑크 세계에서 논리를 테스트하세요.", t3: "네온 버드", d3: "빛나는 네온 기둥 사이를 날아보세요.", t4: "사이버 해커", d4: "디지털 지하 세계의 전설이 되십시오.", hot: "인기", new: "신규", sim: "시뮬" }
+    };
+
+    function setLanguage(lang) {
+        localStorage.setItem('hp_lang', lang);
+        document.getElementById('searchInput').placeholder = i18n[lang].search;
+        document.querySelectorAll('[data-key]').forEach(el => {
+            const key = el.getAttribute('data-key');
+            if (i18n[lang][key]) el.innerText = i18n[lang][key];
+        });
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+        });
+    }
+
+    // Canvas Background
+    const canvas = document.getElementById('canvas-bg');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    function initCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    class Particle {
+        constructor() { this.reset(); }
+        reset() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 1.5; this.speedX = Math.random() * 0.4 - 0.2; this.speedY = Math.random() * 0.4 - 0.2; }
+        update() { this.x += this.speedX; this.y += this.speedY; if (this.x > canvas.width || this.x < 0 || this.y > canvas.height || this.y < 0) this.reset(); }
+        draw() { ctx.fillStyle = "rgba(0, 245, 255, 0.4)"; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
+    }
+    function setup() { particles = []; for (let i = 0; i < 80; i++) particles.push(new Particle()); }
+    function animate() { ctx.clearRect(0, 0, canvas.width, canvas.height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
+    
+    window.addEventListener('resize', () => { initCanvas(); setup(); });
+    initCanvas(); setup(); animate();
+    setLanguage(localStorage.getItem('hp_lang') || 'en');
+
+    function playGame(url) {
+        document.body.style.opacity = '0';
+        setTimeout(() => window.location.href = url, 500);
+    }
+</script>
+</body>
+</html>
