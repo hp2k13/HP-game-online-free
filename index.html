@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HP Game | Futuristic Mini Games</title>
+    <title>HP Game | Futuristic Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -17,11 +17,6 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: var(--bg); }
-        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
-
         body {
             background: var(--bg);
             color: white;
@@ -31,6 +26,7 @@
             background-image: 
                 radial-gradient(circle at 0% 0%, rgba(125, 42, 232, 0.15) 0%, transparent 40%),
                 radial-gradient(circle at 100% 100%, rgba(0, 245, 255, 0.15) 0%, transparent 40%);
+            transition: opacity 0.5s;
         }
 
         #canvas-bg { position: fixed; top: 0; left: 0; z-index: -1; width: 100%; height: 100%; pointer-events: none; }
@@ -40,10 +36,10 @@
             flex-direction: column;
             align-items: center;
             padding: 60px 20px 20px;
-            gap: 40px;
+            gap: 25px;
         }
 
-        /* Glitch Logo Effect */
+        /* Glitch Logo */
         .logo { 
             font-family: 'Orbitron', sans-serif;
             font-size: clamp(40px, 10vw, 75px);
@@ -52,33 +48,17 @@
             position: relative;
             text-transform: uppercase;
             cursor: pointer;
-            user-select: none;
         }
-
-        .logo::before, .logo::after {
-            content: 'HP GAME';
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg);
-        }
-
+        .logo::before, .logo::after { content: 'HP GAME'; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); }
         .logo::before { left: 2px; text-shadow: -2px 0 var(--secondary); clip: rect(44px, 450px, 56px, 0); animation: glitch-1 5s infinite linear alternate-reverse; }
         .logo::after { left: -2px; text-shadow: -2px 0 var(--primary); clip: rect(44px, 450px, 56px, 0); animation: glitch-2 5s infinite linear alternate-reverse; }
 
-        @keyframes glitch-1 {
-            0% { clip: rect(10px, 9999px, 9px, 0); }
-            20% { clip: rect(85px, 9999px, 5px, 0); }
-            40% { clip: rect(12px, 9999px, 88px, 0); }
-            100% { clip: rect(40px, 9999px, 20px, 0); }
-        }
+        @keyframes glitch-1 { 0% { clip: rect(10px, 9999px, 9px, 0); } 100% { clip: rect(40px, 9999px, 20px, 0); } }
+        @keyframes glitch-2 { 0% { clip: rect(54px, 9999px, 34px, 0); } 100% { clip: rect(90px, 9999px, 12px, 0); } }
 
-        @keyframes glitch-2 {
-            0% { clip: rect(54px, 9999px, 34px, 0); }
-            30% { clip: rect(12px, 9999px, 98px, 0); }
-            100% { clip: rect(90px, 9999px, 12px, 0); }
-        }
-
-        /* Search Box */
-        .search-wrapper { width: 100%; max-width: 450px; }
+        /* Search & Lang Wrapper */
+        .controls-wrapper { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 15px; }
+        
         .search-box input {
             width: 100%;
             padding: 15px 25px;
@@ -88,23 +68,45 @@
             color: white;
             outline: none;
             backdrop-filter: blur(20px);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: 0.3s;
             text-align: center;
-            font-size: 16px;
         }
-        .search-box input:focus { border-color: var(--primary); transform: scale(1.05); box-shadow: 0 0 30px rgba(0, 245, 255, 0.2); }
+        .search-box input:focus { border-color: var(--primary); box-shadow: 0 0 20px rgba(0, 245, 255, 0.2); }
 
-        /* Grid */
+        /* Language Switcher */
+        .lang-switcher {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .lang-btn {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            color: rgba(255,255,255,0.5);
+            padding: 5px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+        .lang-btn:hover, .lang-btn.active {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(0, 245, 255, 0.1);
+        }
+
+        /* Container & Cards */
         .container {
-            max-width: 1200px; margin: 40px auto;
-            padding: 0 25px 100px;
+            max-width: 1200px; margin: 20px auto 100px;
+            padding: 0 25px;
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 35px;
-            justify-content: center;
         }
 
-        /* Game Card */
         .game-card {
             background: var(--glass);
             border: 1px solid var(--border);
@@ -112,42 +114,24 @@
             padding: 50px 30px;
             text-align: center;
             position: relative;
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-            overflow: hidden;
+            transition: 0.5s cubic-bezier(0.23, 1, 0.32, 1);
             backdrop-filter: blur(10px);
             cursor: pointer;
-            opacity: 0;
             animation: fadeInUp 0.8s ease-out forwards;
         }
+        .game-card:hover { transform: translateY(-10px); border-color: var(--primary); background: rgba(255, 255, 255, 0.08); }
 
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .game-card:hover {
-            transform: translateY(-15px);
-            border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-        }
+        .game-icon { font-size: 60px; margin-bottom: 20px; display: block; }
+        .game-title { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+        .game-desc { font-size: 13px; color: rgba(255, 255, 255, 0.5); line-height: 1.5; }
 
-        .game-icon { font-size: 65px; margin-bottom: 25px; display: block; transition: 0.4s; }
-        .game-card:hover .game-icon { transform: scale(1.2) rotate(8deg); }
-        .game-title { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 12px; }
-        .game-desc { font-size: 14px; color: rgba(255, 255, 255, 0.5); line-height: 1.5; }
+        .badge { position: absolute; top: 20px; right: 20px; padding: 5px 12px; border-radius: 10px; font-size: 10px; font-weight: 900; }
+        .badge-hot { background: var(--secondary); box-shadow: 0 0 10px var(--secondary); }
+        .badge-new { background: var(--primary); color: #000; box-shadow: 0 0 10px var(--primary); }
 
-        .badge {
-            position: absolute; top: 20px; right: 20px;
-            padding: 6px 15px; border-radius: 12px;
-            font-size: 11px; font-weight: 900;
-        }
-        .badge-hot { background: var(--secondary); box-shadow: 0 0 15px var(--secondary); }
-        .badge-new { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
-
-        footer { text-align: center; padding: 100px 20px; opacity: 0.4; font-size: 12px; letter-spacing: 3px; }
-
-        @media (max-width: 600px) { .container { grid-template-columns: 1fr; } }
+        footer { text-align: center; padding-bottom: 50px; opacity: 0.3; font-size: 10px; letter-spacing: 2px; }
     </style>
 </head>
 <body>
@@ -156,33 +140,38 @@
 
 <header>
     <div class="logo" onclick="location.reload()">HP GAME</div>
-    <div class="search-wrapper">
+    <div class="controls-wrapper">
         <div class="search-box">
-            <input type="text" placeholder="Search for a game..." id="searchInput">
+            <input type="text" placeholder="Search games..." id="searchInput">
+        </div>
+        <div class="lang-switcher">
+            <button class="lang-btn" onclick="setLanguage('vi')">VN</button>
+            <button class="lang-btn active" onclick="setLanguage('en')">EN</button>
+            <button class="lang-btn" onclick="setLanguage('zh')">CN</button>
+            <button class="lang-btn" onclick="setLanguage('ja')">JP</button>
+            <button class="lang-btn" onclick="setLanguage('ko')">KR</button>
         </div>
     </div>
 </header>
 
 <div class="container" id="gameGrid">
     <div class="game-card" style="animation-delay: 0.1s" onclick="playGame('rankdash.html')">
-        <span class="badge badge-hot">HOT</span>
+        <span class="badge badge-hot" id="b-hot">HOT</span>
         <div class="game-icon">🚀</div>
-        <div class="game-title">Rank Dash</div>
-        <div class="game-desc">Dash through obstacles with light speed.</div>
+        <div class="game-title" id="t1">Rank Dash</div>
+        <div class="game-desc" id="d1">Dash through obstacles with light speed.</div>
     </div>
-
     <div class="game-card" style="animation-delay: 0.2s" onclick="playGame('lineline.html')">
-        <span class="badge badge-new">NEW</span>
+        <span class="badge badge-new" id="b-new1">NEW</span>
         <div class="game-icon">💎</div>
-        <div class="game-title">Minesweeper Pro</div>
-        <div class="game-desc">Test your logic in a Cyberpunk world.</div>
+        <div class="game-title" id="t2">Minesweeper Pro</div>
+        <div class="game-desc" id="d2">Test your logic in a Cyberpunk world.</div>
     </div>
-
     <div class="game-card" style="animation-delay: 0.3s" onclick="playGame('neon-bird.html')">
-        <span class="badge badge-new">NEW</span>
+        <span class="badge badge-new" id="b-new2">NEW</span>
         <div class="game-icon">⚡</div>
-        <div class="game-title">Neon Bird</div>
-        <div class="game-desc">Fly through radiant neon energy pillars.</div>
+        <div class="game-title" id="t3">Neon Bird</div>
+        <div class="game-desc" id="d3">Fly through radiant neon energy pillars.</div>
     </div>
 </div>
 
@@ -191,18 +180,44 @@
 </footer>
 
 <script>
-    // Particle Background
+    // --- Translation Data ---
+    const i18n = {
+        vi: { search: "Tìm kiếm trò chơi...", t1: "Rank Dash", d1: "Vượt chướng ngại vật với tốc độ ánh sáng.", t2: "Minesweeper Pro", d2: "Thử thách logic trong thế giới Cyberpunk.", t3: "Neon Bird", d3: "Bay qua các cột năng lượng neon.", hot: "HOT", new: "MỚI" },
+        en: { search: "Search games...", t1: "Rank Dash", d1: "Dash through obstacles with light speed.", t2: "Minesweeper Pro", d2: "Test your logic in a Cyberpunk world.", t3: "Neon Bird", d3: "Fly through radiant neon energy pillars.", hot: "HOT", new: "NEW" },
+        zh: { search: "搜索游戏...", t1: "竞速冲刺", d1: "以光速冲破障碍。", t2: "扫雷专业版", d2: "在赛博朋克世界测试你的逻辑。", t3: "霓虹鸟", d3: "飞越灿烂的霓虹能量柱。", hot: "热门", new: "新品" },
+        ja: { search: "ゲームを検索...", t1: "ランクダッシュ", d1: "光速で障害物を駆け抜けろ。", t2: "マインスイーパープロ", d2: "サイバーパンクな世界で論理を試そう。", t3: "ネオンバード", d3: "輝くネオンの柱を通り抜けろ。", hot: "人気", new: "新作" },
+        ko: { search: "게임 검색...", t1: "랭크 대시", d1: "광속으로 장애물을 돌파하세요.", t2: "지뢰찾기 프로", d2: "사이버펑크 세계에서 논리를 테스트하세요.", t3: "네온 버드", d3: "빛나는 네온 기둥 사이를 날아보세요.", hot: "인기", new: "신규" }
+    };
+
+    function setLanguage(lang) {
+        // Save preference
+        localStorage.setItem('hp_lang', lang);
+        
+        // Update UI
+        document.getElementById('searchInput').placeholder = i18n[lang].search;
+        document.getElementById('t1').innerText = i18n[lang].t1;
+        document.getElementById('d1').innerText = i18n[lang].d1;
+        document.getElementById('t2').innerText = i18n[lang].t2;
+        document.getElementById('d2').innerText = i18n[lang].d2;
+        document.getElementById('t3').innerText = i18n[lang].t3;
+        document.getElementById('b-hot').innerText = i18n[lang].hot;
+        document.getElementById('b-new1').innerText = i18n[lang].new;
+        document.getElementById('b-new2').innerText = i18n[lang].new;
+
+        // Active Button
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.innerText.toLowerCase() === (lang === 'vi' ? 'vn' : lang));
+        });
+    }
+
+    // --- Particle Background ---
     const canvas = document.getElementById('canvas-bg');
     const ctx = canvas.getContext('2d');
     let particles = [];
-
-    function initCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-
+    function initCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     class Particle {
-        constructor() {
+        constructor() { this.reset(); }
+        reset() {
             this.x = Math.random() * canvas.width;
             this.y = Math.random() * canvas.height;
             this.size = Math.random() * 1.5;
@@ -210,47 +225,33 @@
             this.speedY = Math.random() * 0.4 - 0.2;
         }
         update() {
-            this.x += this.speedX;
-            this.y += this.speedY;
-            if (this.x > canvas.width) this.x = 0; else if (this.x < 0) this.x = canvas.width;
-            if (this.y > canvas.height) this.y = 0; else if (this.y < 0) this.y = canvas.height;
+            this.x += this.speedX; this.y += this.speedY;
+            if (this.x > canvas.width || this.x < 0 || this.y > canvas.height || this.y < 0) this.reset();
         }
         draw() {
             ctx.fillStyle = "rgba(0, 245, 255, 0.4)";
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
         }
     }
-
-    function setup() {
-        particles = [];
-        for (let i = 0; i < 80; i++) particles.push(new Particle());
-    }
-
+    function setup() { particles = []; for (let i = 0; i < 80; i++) particles.push(new Particle()); }
     function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         particles.forEach(p => { p.update(); p.draw(); });
         requestAnimationFrame(animate);
     }
 
+    // --- Init ---
     window.addEventListener('resize', () => { initCanvas(); setup(); });
     initCanvas(); setup(); animate();
+    
+    // Load saved lang or default to EN
+    const savedLang = localStorage.getItem('hp_lang') || 'en';
+    setLanguage(savedLang);
 
-    // App Logic
     function playGame(url) {
         document.body.style.opacity = '0';
-        document.body.style.transition = '0.5s';
         setTimeout(() => window.location.href = url, 500);
     }
-
-    document.getElementById('searchInput').addEventListener('input', function(e) {
-        const term = e.target.value.toLowerCase();
-        document.querySelectorAll('.game-card').forEach(card => {
-            const title = card.querySelector('.game-title').innerText.toLowerCase();
-            card.style.display = title.includes(term) ? 'block' : 'none';
-        });
-    });
 </script>
 </body>
 </html>
