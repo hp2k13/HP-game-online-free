@@ -104,7 +104,13 @@
             backdrop-filter: blur(10px);
             cursor: pointer;
         }
-        .game-card:hover { transform: translateY(-10px); border-color: var(--primary); background: rgba(255, 255, 255, 0.08); }
+        /* UPGRADE: Hover effect Glow */
+        .game-card:hover { 
+            transform: translateY(-10px) scale(1.02); 
+            border-color: var(--primary); 
+            background: rgba(255, 255, 255, 0.08); 
+            box-shadow: 0 0 30px rgba(0, 245, 255, 0.2);
+        }
 
         .game-icon { font-size: 60px; margin-bottom: 20px; display: block; }
         .game-title { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 10px; }
@@ -179,6 +185,15 @@
         ko: { search: "게임 검색...", t1: "랭크 대시", d1: "광속으로 장애물을 돌파하세요.", t2: "지뢰찾기 프로", d2: "사이버펑크 세계에서 논리를 테스트하세요.", t3: "네온 버드", d3: "빛나는 네온 기둥 사이를 날아보세요.", t4: "사이버 해커", d4: "디지털 지하 세계의 전설이 되십시오.", hot: "인기", new: "신규", sim: "시뮬" }
     };
 
+    // UPGRADE 1: Search Logic
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll('.game-card').forEach(card => {
+            const title = card.querySelector('.game-title').innerText.toLowerCase();
+            card.style.display = title.includes(term) ? 'block' : 'none';
+        });
+    });
+
     function setLanguage(lang) {
         localStorage.setItem('hp_lang', lang);
         document.getElementById('searchInput').placeholder = i18n[lang].search;
@@ -191,19 +206,82 @@
         });
     }
 
-    // Canvas Background
+    // UPGRADE 2: Interactive Canvas
     const canvas = document.getElementById('canvas-bg');
     const ctx = canvas.getContext('2d');
     let particles = [];
-    function initCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-    class Particle {
-        constructor() { this.reset(); }
-        reset() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 1.5; this.speedX = Math.random() * 0.4 - 0.2; this.speedY = Math.random() * 0.4 - 0.2; }
-        update() { this.x += this.speedX; this.y += this.speedY; if (this.x > canvas.width || this.x < 0 || this.y > canvas.height || this.y < 0) this.reset(); }
-        draw() { ctx.fillStyle = "rgba(0, 245, 255, 0.4)"; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
+    const mouse = { x: null, y: null, radius: 100 };
+
+    window.addEventListener('mousemove', (e) => {
+        mouse.x = e.x;
+        mouse.y = e.y;
+    });
+
+    function initCanvas() { 
+        canvas.width = window.innerWidth; 
+        canvas.height = window.innerHeight; 
     }
-    function setup() { particles = []; for (let i = 0; i < 80; i++) particles.push(new Particle()); }
-    function animate() { ctx.clearRect(0, 0, canvas.width, canvas.height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.size = Math.random() * 2 + 1;
+            this.baseX = this.x;
+            this.baseY = this.y;
+            this.density = (Math.random() * 30) + 1;
+        }
+
+        update() {
+            // Interaction logic
+            let dx = mouse.x - this.x;
+            let dy = mouse.y - this.y;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+            let forceDirectionX = dx / distance;
+            let forceDirectionY = dy / distance;
+            let maxDistance = mouse.radius;
+            let force = (maxDistance - distance) / maxDistance;
+            let directionX = forceDirectionX * force * this.density;
+            let directionY = forceDirectionY * force * this.density;
+
+            if (distance < mouse.radius) {
+                this.x -= directionX;
+                this.y -= directionY;
+            } else {
+                if (this.x !== this.baseX) {
+                    let dx = this.x - this.baseX;
+                    this.x -= dx / 10;
+                }
+                if (this.y !== this.baseY) {
+                    let dy = this.y - this.baseY;
+                    this.y -= dy / 10;
+                }
+            }
+        }
+
+        draw() {
+            ctx.fillStyle = "rgba(0, 245, 255, 0.5)";
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    function setup() {
+        particles = [];
+        for (let i = 0; i < 100; i++) {
+            particles.push(new Particle());
+        }
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+            p.update();
+            p.draw();
+        });
+        requestAnimationFrame(animate);
+    }
     
     window.addEventListener('resize', () => { initCanvas(); setup(); });
     initCanvas(); setup(); animate();
