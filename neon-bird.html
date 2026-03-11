@@ -13,28 +13,30 @@
             color: white; padding: 20px; overflow: hidden;
         }
 
-        /* Nút X quay lại giống Minesweeper */
+        /* Nút X quay lại - Style Rank Dash */
         .home-btn {
             position: fixed; top: 20px; left: 20px;
-            width: 45px; height: 45px; display: flex;
-            align-items: center; justify-content: center;
-            background: rgba(255, 255, 255, 0.1);
-            color: white; text-decoration: none; border-radius: 50%;
-            font-weight: bold; z-index: 1000; border: 1px solid #fff;
-            transition: 0.3s; font-family: sans-serif;
+            padding: 12px 25px; background: rgba(0, 0, 0, 0.5);
+            color: white; text-decoration: none; border-radius: 30px;
+            font-weight: bold; z-index: 1000; border: 2px solid #fff;
+            transition: 0.3s; font-size: 14px;
+            display: flex; align-items: center; justify-content: center;
         }
-        .home-btn:hover { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 15px var(--primary); }
+        .home-btn:hover { background: #ff4757; transform: scale(1.1); color: white; }
 
         .game-wrapper { position: relative; width: 100%; max-width: 800px; aspect-ratio: 16 / 9; margin: auto; }
         canvas {
             width: 100%; height: 100%; display: block; border: 2px solid var(--primary);
             border-radius: 12px; background: #0a0a1a; box-shadow: 0 0 20px rgba(0, 245, 255, 0.15);
         }
+        
+        /* Bảng điểm */
         .ui-panel {
             position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
             text-align: center; pointer-events: none; z-index: 10;
         }
-        .score { font-size: clamp(30px, 8vw, 60px); font-weight: 900; color: var(--secondary); text-shadow: 0 0 15px var(--secondary); }
+        .score { font-size: clamp(40px, 8vw, 70px); font-weight: 900; color: var(--secondary); text-shadow: 0 0 15px var(--secondary); line-height: 1; }
+        .high-score { font-size: 16px; color: #ffee00; text-transform: uppercase; letter-spacing: 2px; margin-top: 5px; opacity: 0.9; }
         
         /* Ending Screen */
         #ending {
@@ -61,7 +63,8 @@
 
         <div class="ui-panel">
             <div class="score" id="score">0</div>
-            <div id="hint" style="color: var(--primary); font-weight: bold;">CHẠM ĐỂ BAY</div>
+            <div class="high-score">BEST: <span id="best">0</span></div>
+            <div id="hint" style="color: var(--primary); font-weight: bold; margin-top: 10px;">CHẠM ĐỂ BAY</div>
         </div>
         <canvas id="game"></canvas>
     </div>
@@ -70,6 +73,7 @@
         const canvas = document.getElementById('game');
         const ctx = canvas.getContext('2d');
         const scoreEl = document.getElementById('score');
+        const bestEl = document.getElementById('best');
         const endingEl = document.getElementById('ending');
 
         canvas.width = 800; canvas.height = 450;
@@ -78,12 +82,16 @@
         let bird = { x: 100, y: 225, w: 40, h: 30, v: 0, gravity: 0.22, jump: -5.5 };
         let pipes = [];
         let score = 0;
+        let highScore = localStorage.getItem('neon_bird_highscore') || 0;
         let gameStarted = false;
         let frame = 0;
         let isWin = false;
 
+        // Hiển thị điểm cao nhất lúc mới vào game
+        bestEl.innerText = highScore;
+
         function createPipe() {
-            let gap = 185; // Khe hở rộng
+            let gap = 185; 
             let h = Math.random() * (canvas.height - gap - 100) + 50;
             pipes.push({ x: canvas.width, y: 0, w: 70, h: h, type: 'top', passed: false });
             pipes.push({ x: canvas.width, y: h + gap, w: 70, h: canvas.height - h - gap, type: 'bottom' });
@@ -113,12 +121,22 @@
                 if (gameStarted) p.x -= 3.5;
                 ctx.fillRect(p.x, p.y, p.w, p.h);
 
+                // Va chạm
                 if (bird.x < p.x + p.w && bird.x + bird.w > p.x && bird.y < p.y + p.h && bird.y + bird.h > p.y) reset();
 
+                // Tính điểm
                 if (!p.passed && p.type === 'top' && bird.x > p.x + p.w) {
                     score++;
                     p.passed = true;
                     scoreEl.innerText = score;
+                    
+                    // Cập nhật High Score ngay lập tức nếu vượt qua
+                    if (score > highScore) {
+                        highScore = score;
+                        localStorage.setItem('neon_bird_highscore', highScore);
+                        bestEl.innerText = highScore;
+                    }
+
                     if (score >= 999) triggerWin();
                 }
             });
@@ -131,8 +149,6 @@
         function triggerWin() {
             isWin = true;
             endingEl.style.display = 'flex';
-            
-            // CỘNG ĐIỂM ⭐ VÀO LOCALSTORAGE
             let total = parseInt(localStorage.getItem('hp_game_points')) || 0;
             localStorage.setItem('hp_game_points', total + 1);
         }
