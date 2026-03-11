@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
+    <title>SCRATCH KING | ULTIMATE SIMULATOR</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a; --panel: #1e293b; --accent: #6366f1;
+            --success: #10b981; --danger: #f43f5e; --gold: #fbbf24;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            margin: 0; background: var(--bg); font-family: 'Plus Jakarta Sans', sans-serif;
+            display: flex; height: 100vh; color: #f8fafc; overflow: hidden;
+            transition: filter 0.1s;
+        }
+
+        /* --- SIDEBAR --- */
+        #sidebar { 
+            width: 350px; background: var(--panel); border-right: 1px solid #334155;
+            display: flex; flex-direction: column; padding: 25px; z-index: 100; position: relative;
+        }
+        .rank-badge { background: var(--accent); color: white; padding: 5px 15px; border-radius: 50px; font-size: 12px; font-weight: 800; width: fit-content; margin-bottom: 10px; }
+        .stat-group { background: #0f172a; padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #334155; }
+        .stat-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 800; color: var(--success); }
+
+        /* --- TABS --- */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 10px; background: #334155; border: none; color: white; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700; }
+        .tab-btn.active { background: var(--accent); }
+        .scroll-area { flex-grow: 1; overflow-y: auto; padding-right: 5px; }
+        .shop-item { background: #334155; padding: 12px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
+        .shop-item:hover { border-color: var(--accent); background: #475569; }
+        .shop-item.disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* --- MAIN AREA --- */
+        #main { flex-grow: 1; display: flex; flex-direction: column; position: relative; }
+        #top-bar { padding: 20px 40px; background: rgba(15, 23, 42, 0.8); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
+        #save-status { font-size: 10px; color: #64748b; font-weight: 800; text-transform: uppercase; }
+
+        #game-view { flex-grow: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; padding-bottom: 40px; }
+        .simulator-card { position: relative; width: 600px; height: 340px; background: #fff; padding: 15px; border-radius: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        #grid { width: 100%; height: 100%; border-radius: 28px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 12px; background: #e2e8f0; }
+        .cell { background: white; border-radius: 20px; display: flex; justify-content: center; align-items: center; font-size: 55px; border: 1px solid #cbd5e1; color: #334155; }
+        canvas { position: absolute; top: 15px; left: 15px; border-radius: 28px; cursor: crosshair; z-index: 10; touch-action: none; transition: opacity 0.3s; }
+
+        #action-btn { margin-top: 30px; padding: 18px 80px; border-radius: 50px; border: none; background: var(--success); color: white; font-size: 20px; font-weight: 800; cursor: pointer; display: none; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+        
+        /* --- HORROR ELEMENTS --- */
+        #hack-overlay { position: fixed; inset: 0; background: black; z-index: 10000; display: none; flex-direction: column; padding: 40px; font-family: 'JetBrains Mono', monospace; color: #00ff00; overflow: hidden; }
+        #scare-img { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10001; display: none; }
+        .glitch { animation: glitch-anim 0.1s infinite; }
+        @keyframes glitch-anim {
+            0% { transform: translate(3px, 3px); filter: hue-rotate(90deg) contrast(2); }
+            50% { transform: translate(-3px, -3px); filter: invert(1); }
+            100% { transform: translate(2px, -2px); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <div class="rank-badge" id="rank-name">Hạng: Đang tải...</div>
+    <div class="brand" style="font-weight: 900; letter-spacing: 2px; color: var(--accent);">SCRATCH KING SIM</div>
+    
+    <div class="stat-group">
+        <div class="stat-label">Tiền mặt</div>
+        <div class="stat-value" id="cash-val">$ 0</div>
+        <div class="stat-label" style="margin-top:10px">Nợ nần</div>
+        <div class="stat-value" id="debt-val" style="color:var(--danger); font-size:18px">$ 0</div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('cards')">Thẻ</button>
+        <button class="tab-btn" onclick="showTab('shop')">Shop</button>
+        <button class="tab-btn" onclick="showTab('skills')">Kỹ Năng</button>
+    </div>
+
+    <div id="cards-tab" class="scroll-area"></div>
+    <div id="shop-tab" class="scroll-area" style="display:none"></div>
+    <div id="skills-tab" class="scroll-area" style="display:none">
+        <div class="shop-item" onclick="buySkill('luck_up', 2000)"><b>Tăng Vận May</b><span>$2000</span></div>
+        <div class="shop-item" style="background:var(--danger); margin-top:20px" onclick="hardReset()"><b>XÓA DỮ LIỆU</b></div>
+    </div>
+
+    <div style="margin-top:auto;">
+        <button class="shop-item" style="width:100%; background:var(--danger);" onclick="takeLoan()">🆘 Vay khẩn cấp $5,000</button>
+    </div>
+
+    <div onclick="triggerHack()" style="position: absolute; bottom: 5px; right: 10px; opacity: 0.1; cursor: pointer; font-size: 12px;">⚙️</div>
+</div>
+
+<div id="main">
+    <div id="top-bar">
+        <div id="save-status">AUTO-SAVE ACTIVE</div>
+        <div style="font-family: 'JetBrains Mono'; font-size:12px;">LVL <span id="lvl-txt">1</span> | XP <span id="xp-txt">0</span>/100</div>
+    </div>
+
+    <div id="game-view">
+        <div class="simulator-card" id="card-obj">
+            <div id="grid"></div>
+            <canvas id="scratch-canvas"></canvas>
+        </div>
+        <button id="action-btn" onclick="collect()">NHẬN THƯỞNG</button>
+    </div>
+</div>
+
+<div id="hack-overlay"></div>
+<img id="scare-img" src="https://i.imgur.com/vHqB3qS.jpg">
+
+<script>
+    const CARD_DATA = {
+        bronze: { name: "Thẻ Đồng", cost: 10, lvl: 1, color: "#cd7f32", icons: ["🍎","🍎","🍎"], odds: 35, payout: 5 },
+        silver: { name: "Thẻ Bạc", cost: 100, lvl: 3, color: "#94a3b8", icons: ["💎","💎","💎"], odds: 25, payout: 10 },
+        gold: { name: "Thẻ Vàng", cost: 1000, lvl: 7, color: "#fbbf24", icons: ["👑","👑","👑"], odds: 15, payout: 50 },
+        black: { name: "Thẻ Đen", cost: 10000, lvl: 15, color: "#000000", icons: ["🌌","🌌","🌌"], odds: 7, payout: 200 }
+    };
+
+    let sim = {
+        cash: 1000, debt: 0, xp: 0, lvl: 1, 
+        luckBonus: 0, brushSize: 60,
+        multi: 1, xray: false, tempLuck: false
+    };
+
+    // --- HỆ THỐNG LƯU TRỮ ---
+    function save() {
+        localStorage.setItem('scratch_sim_v3', JSON.stringify(sim));
+        document.getElementById('save-status').innerText = "ĐÃ LƯU...";
+        setTimeout(() => document.getElementById('save-status').innerText = "AUTO-SAVE ACTIVE", 1000);
+    }
+
+    function load() {
+        const data = localStorage.getItem('scratch_sim_v3');
+        if(data) sim = JSON.parse(data);
+        sim.multi = 1; sim.xray = false; sim.tempLuck = false;
+        updateUI(); updateRank();
+    }
+
+    // --- GAMEPLAY ---
+    function showTab(tab) {
+        ['cards','shop','skills'].forEach(t => document.getElementById(t+'-tab').style.display = 'none');
+        document.getElementById(tab+'-tab').style.display = 'block';
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    }
+
+    function renderMenus() {
+        const cTab = document.getElementById('cards-tab');
+        cTab.innerHTML = '';
+        for(let id in CARD_DATA) {
+            let c = CARD_DATA[id], locked = sim.lvl < c.lvl;
+            cTab.innerHTML += `<div class="shop-item ${locked ? 'disabled' : ''}" onclick="${locked?'':`buyCard('${id}')`}">
+                <b>${c.name}</b><span>$${c.cost}</span></div>`;
+        }
+        document.getElementById('shop-tab').innerHTML = `
+            <div class="shop-item" onclick="buyItem('luck')"><b>Thuốc May Mắn (+10%)</b><span>$200</span></div>
+            <div class="shop-item" onclick="buyItem('xray')"><b>Kính X-Ray</b><span>$500</span></div>
+            <div class="shop-item" onclick="buyItem('double')"><b>Bùa Nhân Đôi</b><span>$1000</span></div>`;
+    }
+
+    function buyCard(type) {
+        let c = CARD_DATA[type];
+        if(sim.cash < c.cost) return alert("Không đủ tiền!");
+        sim.cash -= c.cost;
+        let win = Math.random() * 100 < (c.odds + sim.luckBonus + (sim.tempLuck ? 10 : 0));
+        sim.currentPrize = win ? (c.cost * c.payout * sim.multi) : 0;
+        
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+        let symbols = win ? [...c.icons] : [c.icons[0], "❌", "💀"];
+        symbols.concat(["❌","💀","❓","🍂","🔥","💨"]).sort(()=>Math.random()-0.5).slice(0,9).forEach(i => {
+            grid.innerHTML += `<div class="cell">${i}</div>`;
+        });
+
+        initCanvas(c.color, c.name);
+        document.getElementById('action-btn').style.display = 'none';
+        updateUI();
+    }
+
+    function initCanvas(color, name) {
+        const canvas = document.getElementById('scratch-canvas');
+        const box = document.getElementById('card-obj');
+        canvas.width = box.offsetWidth - 30; canvas.height = box.offsetHeight - 30;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = color; ctx.fillRect(0,0,canvas.width, canvas.height);
+        ctx.fillStyle = "white"; ctx.font = "bold 30px Plus Jakarta Sans"; ctx.textAlign="center";
+        ctx.fillText(name, canvas.width/2, canvas.height/2 + 10);
+        canvas.style.opacity = sim.xray ? "0.4" : "1";
+    }
+
+    const canvas = document.getElementById('scratch-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function handleScratch(e) {
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+        const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath(); ctx.arc(x, y, sim.brushSize, 0, Math.PI*2); ctx.fill();
+        document.getElementById('action-btn').style.display = 'block';
+    }
+
+    canvas.addEventListener('mousemove', (e) => { if(e.buttons === 1) handleScratch(e); });
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); handleScratch(e); });
+
+    function collect() {
+        if(sim.currentPrize > 0) {
+            let win = sim.currentPrize;
+            if(sim.debt > 0) {
+                let pay = Math.floor(win * 0.5);
+                sim.debt -= pay; win -= pay;
+                if(sim.debt < 0) { win += Math.abs(sim.debt); sim.debt = 0; }
+            }
+            sim.cash += win;
+            confetti({ particleCount: 150, spread: 70 });
+        }
+        sim.xp += 34;
+        if(sim.xp >= 100) { sim.xp = 0; sim.lvl++; updateRank(); }
+        sim.multi = 1; sim.xray = false; sim.tempLuck = false;
+        ctx.clearRect(0,0,1000,1000);
+        document.getElementById('action-btn').style.display = 'none';
+        updateUI(); save();
+    }
+
+    function buyItem(type) {
+        const prices = { luck: 200, xray: 500, double: 1000 };
+        if(sim.cash < prices[type]) return;
+        sim.cash -= prices[type];
+        if(type === 'luck') sim.tempLuck = true;
+        if(type === 'xray') { sim.xray = true; canvas.style.opacity = "0.4"; }
+        if(type === 'double') sim.multi = 2;
+        updateUI(); save();
+    }
+
+    function buySkill(type, price) {
+        if(sim.cash < price) return;
+        sim.cash -= price;
+        if(type === 'luck_up') sim.luckBonus += 2;
+        alert("Nâng cấp thành công!");
+        updateUI(); save();
+    }
+
+    function takeLoan() { sim.cash += 5000; sim.debt += 15000; updateUI(); save(); }
+
+    function updateRank() {
+        const ranks = ["Người Vô Gia Cư", "Dân Chơi Xóm", "Con Nghiện Cào", "Trùm Vé Số", "Vua Casino", "Huyền Thoại"];
+        sim.rank = ranks[Math.min(Math.floor(sim.lvl/4), ranks.length - 1)];
+        document.getElementById('rank-name').innerText = "Hạng: " + sim.rank;
+        renderMenus();
+    }
+
+    function updateUI() {
+        document.getElementById('cash-val').innerText = "$" + Math.floor(sim.cash).toLocaleString();
+        document.getElementById('debt-val').innerText = "$" + Math.floor(sim.debt).toLocaleString();
+        document.getElementById('lvl-txt').innerText = sim.lvl;
+        document.getElementById('xp-txt').innerText = sim.xp;
+    }
+
+    function hardReset() { if(confirm("Xóa hết dữ liệu?")) { localStorage.clear(); location.reload(); } }
+
+    // --- KINH DỊ (JUMPSCARE) ---
+    function triggerHack() {
+        const hack = document.getElementById('hack-overlay');
+        hack.style.display = 'flex';
+        let logs = ["SCANNING LOCAL IP...", "PORT 8080 OPEN", "DOWNLOAD: USER_DATA.DB", "ENCRYPTING...", "GOODBYE PLAYER", "I AM INSIDE"];
+        let i = 0;
+        let interval = setInterval(() => {
+            hack.innerHTML += `<div style="margin-bottom:5px">> ${logs[i%logs.length]}</div>`;
+            i++;
+            if(i > 15) { clearInterval(interval); startScare(); }
+        }, 150);
+    }
+
+    
+
+    function startScare() {
+        const audio = new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptitle=Scream&filename=24/244321-729f6044-6338-4f81-912b-ec1d7e2e6044.mp3');
+        const img = document.getElementById('scare-img');
+        document.body.classList.add('glitch');
+        img.style.display = 'block';
+        audio.play().catch(()=>{});
+        setTimeout(() => {
+            document.body.innerHTML = "<div style='background:black; color:red; height:100vh; display:flex; align-items:center; justify-content:center; font-family:monospace; font-size:30px'>DỮ LIỆU ĐÃ BỊ PHÁ HỦY</div>";
+        }, 2000);
+    }
+
+    load();
+</script>
+</body>
+</html>
