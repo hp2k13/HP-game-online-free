@@ -7,11 +7,38 @@
         :root { --primary: #2563eb; --bg: #ffffff; --sidebar: #f8fafc; --border: #e2e8f0; }
         body { margin: 0; font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; background: var(--bg); }
         
+        /* --- STYLE NÚT X (RANK DASH STYLE) --- */
+        .home-btn {
+            position: fixed; 
+            top: 20px; 
+            left: 20px;
+            padding: 12px 25px; 
+            background: rgba(0, 0, 0, 0.5);
+            color: white; 
+            text-decoration: none; 
+            border-radius: 30px;
+            font-weight: bold; 
+            z-index: 2000; /* Đảm bảo nằm trên cùng của canvas */
+            border: 2px solid #fff;
+            transition: 0.3s; 
+            font-size: 14px;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .home-btn:hover { 
+            background: #ff4757; 
+            transform: scale(1.1); 
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+        }
+
         /* Play Area */
         #play-area { flex-grow: 1; position: relative; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 40px 40px; }
         
         /* Sidebar */
-        #sidebar { width: 350px; background: var(--sidebar); border-left: 1px solid var(--border); display: flex; flex-direction: column; box-shadow: -4px 0 15px rgba(0,0,0,0.05); }
+        #sidebar { width: 350px; background: var(--sidebar); border-left: 1px solid var(--border); display: flex; flex-direction: column; box-shadow: -4px 0 15px rgba(0,0,0,0.05); z-index: 1000; }
         
         .header { padding: 20px; background: white; border-bottom: 1px solid var(--border); }
         .progress-container { margin-top: 10px; background: #e2e8f0; border-radius: 10px; height: 12px; overflow: hidden; }
@@ -29,11 +56,14 @@
         .canvas-item { position: absolute; z-index: 10; transition: transform 0.1s; }
 
         #search { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); margin-top: 10px; outline: none; }
-        .controls { position: absolute; top: 20px; left: 20px; display: flex; gap: 10px; }
-        button { padding: 8px 15px; border-radius: 6px; border: 1px solid var(--border); background: white; cursor: pointer; }
+        .controls { position: absolute; bottom: 20px; left: 20px; display: flex; gap: 10px; } /* Chuyển controls xuống dưới để tránh nút X */
+        button { padding: 8px 15px; border-radius: 6px; border: 1px solid var(--border); background: white; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #f1f5f9; }
     </style>
 </head>
 <body>
+
+<a href="index.html" class="home-btn">X</a>
 
 <div id="play-area">
     <div class="controls">
@@ -51,11 +81,10 @@
     </div>
     <div id="inventory"></div>
 </div>
-</script>
+
 <script>
-    // 1. DANH SÁCH CÔNG THỨC KHỔNG LỒ (Đã chuẩn hóa chữ thường)
+    // 1. DANH SÁCH CÔNG THỨC
     const recipes = {
-        // --- CƠ BẢN ---
         "lửa+nước": { name: "Hơi nước", emoji: "💨" },
         "đất+nước": { name: "Bùn", emoji: "💩" },
         "gió+nước": { name: "Sương mù", emoji: "🌫️" },
@@ -64,8 +93,6 @@
         "gió+gió": { name: "Lốc xoáy", emoji: "🌪️" },
         "đất+đất": { name: "Núi", emoji: "⛰️" },
         "lửa+lửa": { name: "Mặt trời", emoji: "☀️" },
-
-        // --- THIÊN NHIÊN ---
         "lava+nước": { name: "Đá", emoji: "🪨" },
         "đá+gió": { name: "Cát", emoji: "⏳" },
         "cát+lửa": { name: "Thủy tinh", emoji: "💎" },
@@ -80,8 +107,6 @@
         "đá+đá": { name: "Lửa", emoji: "🔥" },
         "cát+cát": { name: "Sa mạc", emoji: "🏜️" },
         "sa mạc+nước": { name: "Ốc đảo", emoji: "🏝️" },
-
-        // --- SỰ SỐNG ---
         "bùn+nước": { name: "Vi khuẩn", emoji: "🦠" },
         "vi khuẩn+nước": { name: "Cá", emoji: "🐟" },
         "cá+đất": { name: "Ếch", emoji: "🐸" },
@@ -92,8 +117,6 @@
         "sự sống+đất": { name: "Con người", emoji: "🧍" },
         "con người+con người": { name: "Tình yêu", emoji: "❤️" },
         "tình yêu+con người": { name: "Gia đình", emoji: "👨‍👩‍👧‍👦" },
-
-        // --- CÔNG NGHỆ & VĂN MINH ---
         "đất+lửa": { name: "Gạch", emoji: "🧱" },
         "gạch+gạch": { name: "Bức tường", emoji: "🧱" },
         "bức tường+bức tường": { name: "Ngôi nhà", emoji: "🏠" },
@@ -102,23 +125,10 @@
         "công cụ+cây": { name: "Gỗ", emoji: "🪵" },
         "gỗ+lửa": { name: "Than", emoji: "🔥" },
         "than+lửa": { name: "Kim cương", emoji: "💎" },
-        "công cụ+bánh xe": { name: "Máy móc", emoji: "⚙️" },
-        "máy móc+lửa": { name: "Động cơ", emoji: "🚂" },
         "đám mây+lửa": { name: "Sét", emoji: "⚡" },
-        "sét+kim loại": { name: "Điện", emoji: "🔋" },
-        "điện+thủy tinh": { name: "Bóng đèn", emoji: "💡" },
-        "điện+máy móc": { name: "Robot", emoji: "🤖" },
-        "robot+sự sống": { name: "Cyborg", emoji: "🦾" },
-        "máy tính+internet": { name: "Google", emoji: "🔍" },
-        "ngôi nhà+đám mây": { name: "Thiên đường", emoji: "☁️" },
-
-        // --- ĐỒ ĂN ---
         "con người+lửa": { name: "Đầu bếp", emoji: "👨‍🍳" },
         "đầu bếp+nước": { name: "Súp", emoji: "🍲" },
         "cây+nước": { name: "Trái cây", emoji: "🍎" },
-        "trái cây+nước": { name: "Nước ép", emoji: "🍹" },
-        "lửa+trái cây": { name: "Mứt", emoji: "🍯" },
-        "bùn+cây": { name: "Khoai tây", emoji: "🥔" },
         "khoai tây+lửa": { name: "Khoai tây chiên", emoji: "🍟" }
     };
 
@@ -132,7 +142,6 @@
     const inventory = document.getElementById('inventory');
 
     function getCleanName(el) {
-        // Lấy tên, bỏ emoji và số, chuyển về chữ thường chuẩn
         return el.innerText.replace(/[0-9]/g, '').replace(/[^\p{L}\s]/gu, '').trim().toLowerCase();
     }
 
@@ -170,6 +179,7 @@
     function makeDraggable(el) {
         let ox, oy;
         el.onmousedown = (e) => {
+            if (e.button !== 0) return;
             e.preventDefault(); e.stopPropagation();
             el.style.zIndex = 1000;
             const r = el.getBoundingClientRect();
@@ -220,11 +230,18 @@
         });
     }
 
+    function filterItems() {
+        const query = document.getElementById('search').value.toLowerCase();
+        document.querySelectorAll('#inventory .item').forEach(item => {
+            const name = item.querySelector('span:last-child').innerText.toLowerCase();
+            item.style.display = name.includes(query) ? 'flex' : 'none';
+        });
+    }
+
     function clearCanvas() { document.querySelectorAll('.canvas-item').forEach(el => el.remove()); }
     function resetGame() { if(confirm("Reset toàn bộ tiến trình?")) { localStorage.clear(); location.reload(); } }
     
     render();
-</script>
 </script>
 </body>
 </html>
