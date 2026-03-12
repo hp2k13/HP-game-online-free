@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Infinite Craft Pro: Mission 500</title>
+    <style>
+        :root { --primary: #2563eb; --bg: #ffffff; --sidebar: #f8fafc; --border: #e2e8f0; }
+        body { margin: 0; font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; background: var(--bg); }
+        
+        /* Play Area */
+        #play-area { flex-grow: 1; position: relative; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 40px 40px; }
+        
+        /* Sidebar */
+        #sidebar { width: 350px; background: var(--sidebar); border-left: 1px solid var(--border); display: flex; flex-direction: column; box-shadow: -4px 0 15px rgba(0,0,0,0.05); }
+        
+        .header { padding: 20px; background: white; border-bottom: 1px solid var(--border); }
+        .progress-container { margin-top: 10px; background: #e2e8f0; border-radius: 10px; height: 12px; overflow: hidden; }
+        #progress-bar { background: var(--primary); width: 0%; height: 100%; transition: width 0.5s ease; }
+        #stats { font-size: 13px; margin-top: 5px; color: #64748b; font-weight: bold; }
+
+        #inventory { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; }
+        
+        .item {
+            padding: 8px 14px; background: white; border: 1px solid var(--border); border-radius: 8px;
+            cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px;
+            font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: all 0.2s;
+        }
+        .item:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .canvas-item { position: absolute; z-index: 10; transition: transform 0.1s; }
+
+        #search { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); margin-top: 10px; outline: none; }
+        .controls { position: absolute; top: 20px; left: 20px; display: flex; gap: 10px; }
+        button { padding: 8px 15px; border-radius: 6px; border: 1px solid var(--border); background: white; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div id="play-area">
+    <div class="controls">
+        <button onclick="clearCanvas()">Dọn màn hình</button>
+        <button onclick="resetGame()" style="color:red">Reset Game</button>
+    </div>
+</div>
+
+<div id="sidebar">
+    <div class="header">
+        <h2 style="margin:0; font-size: 1.2rem;">Khám Phá Thế Giới</h2>
+        <div class="progress-container"><div id="progress-bar"></div></div>
+        <div id="stats">Đã tìm thấy: 4 / 500</div>
+        <input type="text" id="search" placeholder="Tìm nguyên tố..." oninput="filterItems()">
+    </div>
+    <div id="inventory"></div>
+</div>
+</script>
+<script>
+    // 1. DANH SÁCH CÔNG THỨC KHỔNG LỒ (Đã chuẩn hóa chữ thường)
+    const recipes = {
+        // --- CƠ BẢN ---
+        "lửa+nước": { name: "Hơi nước", emoji: "💨" },
+        "đất+nước": { name: "Bùn", emoji: "💩" },
+        "gió+nước": { name: "Sương mù", emoji: "🌫️" },
+        "lửa+đất": { name: "Lava", emoji: "🌋" },
+        "đất+gió": { name: "Bụi", emoji: "🧹" },
+        "gió+gió": { name: "Lốc xoáy", emoji: "🌪️" },
+        "đất+đất": { name: "Núi", emoji: "⛰️" },
+        "lửa+lửa": { name: "Mặt trời", emoji: "☀️" },
+
+        // --- THIÊN NHIÊN ---
+        "lava+nước": { name: "Đá", emoji: "🪨" },
+        "đá+gió": { name: "Cát", emoji: "⏳" },
+        "cát+lửa": { name: "Thủy tinh", emoji: "💎" },
+        "hơi nước+gió": { name: "Đám mây", emoji: "☁️" },
+        "đám mây+nước": { name: "Mưa", emoji: "🌧️" },
+        "mưa+đất": { name: "Cây", emoji: "🌱" },
+        "cây+cây": { name: "Rừng", emoji: "🌲" },
+        "mặt trời+mưa": { name: "Cầu vồng", emoji: "🌈" },
+        "mặt trời+đất": { name: "Hành tinh", emoji: "🪐" },
+        "hành tinh+hành tinh": { name: "Hệ mặt trời", emoji: "🌌" },
+        "núi+lava": { name: "Núi lửa", emoji: "🌋" },
+        "đá+đá": { name: "Lửa", emoji: "🔥" },
+        "cát+cát": { name: "Sa mạc", emoji: "🏜️" },
+        "sa mạc+nước": { name: "Ốc đảo", emoji: "🏝️" },
+
+        // --- SỰ SỐNG ---
+        "bùn+nước": { name: "Vi khuẩn", emoji: "🦠" },
+        "vi khuẩn+nước": { name: "Cá", emoji: "🐟" },
+        "cá+đất": { name: "Ếch", emoji: "🐸" },
+        "ếch+bùn": { name: "Thằn lằn", emoji: "🦎" },
+        "thằn lằn+lửa": { name: "Rồng", emoji: "🐉" },
+        "rồng+mưa": { name: "Cá chép hóa rồng", emoji: "🎏" },
+        "vi khuẩn+vi khuẩn": { name: "Sự sống", emoji: "✨" },
+        "sự sống+đất": { name: "Con người", emoji: "🧍" },
+        "con người+con người": { name: "Tình yêu", emoji: "❤️" },
+        "tình yêu+con người": { name: "Gia đình", emoji: "👨‍👩‍👧‍👦" },
+
+        // --- CÔNG NGHỆ & VĂN MINH ---
+        "đất+lửa": { name: "Gạch", emoji: "🧱" },
+        "gạch+gạch": { name: "Bức tường", emoji: "🧱" },
+        "bức tường+bức tường": { name: "Ngôi nhà", emoji: "🏠" },
+        "ngôi nhà+ngôi nhà": { name: "Thành phố", emoji: "🏙️" },
+        "con người+đá": { name: "Công cụ", emoji: "🛠️" },
+        "công cụ+cây": { name: "Gỗ", emoji: "🪵" },
+        "gỗ+lửa": { name: "Than", emoji: "🔥" },
+        "than+lửa": { name: "Kim cương", emoji: "💎" },
+        "công cụ+bánh xe": { name: "Máy móc", emoji: "⚙️" },
+        "máy móc+lửa": { name: "Động cơ", emoji: "🚂" },
+        "đám mây+lửa": { name: "Sét", emoji: "⚡" },
+        "sét+kim loại": { name: "Điện", emoji: "🔋" },
+        "điện+thủy tinh": { name: "Bóng đèn", emoji: "💡" },
+        "điện+máy móc": { name: "Robot", emoji: "🤖" },
+        "robot+sự sống": { name: "Cyborg", emoji: "🦾" },
+        "máy tính+internet": { name: "Google", emoji: "🔍" },
+        "ngôi nhà+đám mây": { name: "Thiên đường", emoji: "☁️" },
+
+        // --- ĐỒ ĂN ---
+        "con người+lửa": { name: "Đầu bếp", emoji: "👨‍🍳" },
+        "đầu bếp+nước": { name: "Súp", emoji: "🍲" },
+        "cây+nước": { name: "Trái cây", emoji: "🍎" },
+        "trái cây+nước": { name: "Nước ép", emoji: "🍹" },
+        "lửa+trái cây": { name: "Mứt", emoji: "🍯" },
+        "bùn+cây": { name: "Khoai tây", emoji: "🥔" },
+        "khoai tây+lửa": { name: "Khoai tây chiên", emoji: "🍟" }
+    };
+
+    const TOTAL_GOAL = 500;
+    let discovered = JSON.parse(localStorage.getItem('craft_500_save')) || [
+        { name: "Lửa", emoji: "🔥" }, { name: "Nước", emoji: "💧" },
+        { name: "Đất", emoji: "🌍" }, { name: "Gió", emoji: "🌬️" }
+    ];
+
+    const playArea = document.getElementById('play-area');
+    const inventory = document.getElementById('inventory');
+
+    function getCleanName(el) {
+        // Lấy tên, bỏ emoji và số, chuyển về chữ thường chuẩn
+        return el.innerText.replace(/[0-9]/g, '').replace(/[^\p{L}\s]/gu, '').trim().toLowerCase();
+    }
+
+    function updateStats() {
+        const count = discovered.length;
+        const percent = Math.min((count / TOTAL_GOAL) * 100, 100);
+        document.getElementById('progress-bar').style.width = percent + "%";
+        document.getElementById('stats').innerText = `Tiến độ: ${count} / ${TOTAL_GOAL} nguyên tố`;
+    }
+
+    function render() {
+        inventory.innerHTML = '';
+        discovered.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.innerHTML = `<small>${index + 1}</small> <span>${item.emoji}</span> <span>${item.name}</span>`;
+            div.onmousedown = (e) => spawn(item, e.clientX, e.clientY);
+            inventory.appendChild(div);
+        });
+        localStorage.setItem('craft_500_save', JSON.stringify(discovered));
+        updateStats();
+    }
+
+    function spawn(item, x, y) {
+        const el = document.createElement('div');
+        el.className = 'item canvas-item';
+        el.innerHTML = `<span>${item.emoji}</span> <span>${item.name}</span>`;
+        const rect = playArea.getBoundingClientRect();
+        el.style.left = (x - rect.left - 40) + 'px';
+        el.style.top = (y - rect.top - 20) + 'px';
+        playArea.appendChild(el);
+        makeDraggable(el);
+    }
+
+    function makeDraggable(el) {
+        let ox, oy;
+        el.onmousedown = (e) => {
+            e.preventDefault(); e.stopPropagation();
+            el.style.zIndex = 1000;
+            const r = el.getBoundingClientRect();
+            ox = e.clientX - r.left; oy = e.clientY - r.top;
+
+            function move(e) {
+                const area = playArea.getBoundingClientRect();
+                el.style.left = (e.clientX - area.left - ox) + 'px';
+                el.style.top = (e.clientY - area.top - oy) + 'px';
+            }
+
+            function stop() {
+                el.style.zIndex = 10;
+                checkCollision(el);
+                document.removeEventListener('mousemove', move);
+                document.removeEventListener('mouseup', stop);
+            }
+            document.addEventListener('mousemove', move);
+            document.addEventListener('mouseup', stop);
+        };
+    }
+
+    function checkCollision(activeEl) {
+        const items = document.querySelectorAll('.canvas-item');
+        const r1 = activeEl.getBoundingClientRect();
+
+        items.forEach(other => {
+            if (other === activeEl) return;
+            const r2 = other.getBoundingClientRect();
+
+            if (!(r1.right < r2.left || r1.left > r2.right || r1.bottom < r2.top || r1.top > r2.bottom)) {
+                const n1 = getCleanName(activeEl);
+                const n2 = getCleanName(other);
+                const result = recipes[n1 + "+" + n2] || recipes[n2 + "+" + n1];
+
+                if (result) {
+                    const nx = other.offsetLeft;
+                    const ny = other.offsetTop;
+                    activeEl.remove(); other.remove();
+                    spawn(result, nx + playArea.getBoundingClientRect().left + 40, ny + playArea.getBoundingClientRect().top + 20);
+
+                    if (!discovered.find(d => d.name.toLowerCase() === result.name.toLowerCase())) {
+                        discovered.push(result);
+                        render();
+                    }
+                }
+            }
+        });
+    }
+
+    function clearCanvas() { document.querySelectorAll('.canvas-item').forEach(el => el.remove()); }
+    function resetGame() { if(confirm("Reset toàn bộ tiến trình?")) { localStorage.clear(); location.reload(); } }
+    
+    render();
+</script>
+</script>
+</body>
+</html>
