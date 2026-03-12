@@ -16,6 +16,33 @@
 
         #matrix-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.15; }
 
+        /* --- STYLE NÚT X (RANK DASH STYLE) --- */
+        .home-btn {
+            position: fixed; 
+            top: 20px; 
+            left: 20px;
+            padding: 12px 25px; 
+            background: rgba(0, 0, 0, 0.5);
+            color: white; 
+            text-decoration: none; 
+            border-radius: 30px;
+            font-weight: bold; 
+            z-index: 10002; 
+            border: 2px solid #fff;
+            transition: 0.3s; 
+            font-size: 14px;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .home-btn:hover { 
+            background: #ff4757; 
+            transform: scale(1.1); 
+            color: white;
+            box-shadow: 0 0 15px rgba(255, 71, 87, 0.4);
+        }
+
         /* Sidebar */
         #sidebar {
             width: 350px; background: var(--panel); border-right: 1px solid var(--primary);
@@ -69,13 +96,15 @@
         /* Workspace */
         #terminal { flex: 1; padding: 20px; display: flex; flex-direction: column-reverse; overflow: hidden; }
         #interact { height: 250px; border-top: 1px solid var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); }
-        .hack-orb { width: 140px; height: 140px; border-radius: 50%; border: 2px solid var(--primary); background: none; color: var(--primary); font-family: 'Orbitron'; font-weight: 900; cursor: pointer; }
+        .hack-orb { width: 140px; height: 140px; border-radius: 50%; border: 2px solid var(--primary); background: none; color: var(--primary); font-family: 'Orbitron'; font-weight: 900; cursor: pointer; transition: 0.2s; }
+        .hack-orb:active { transform: scale(0.9); background: rgba(0, 245, 255, 0.1); }
     </style>
 </head>
 <body>
 
     <canvas id="matrix-bg"></canvas>
-    <a href="index.html" style="position:fixed; top:20px; left:20px; z-index:10002; color:white; text-decoration:none; font-family:Orbitron; border:1px solid white; padding:10px; border-radius:100%">X</a>
+    
+    <a href="index.html" class="home-btn">X</a>
 
     <div id="ban-overlay">
         <div class="ban-title">ACCESS BANNED</div>
@@ -125,10 +154,15 @@
     </div>
 
 <script>
-    // Matrix & Logic
+    // Matrix Background Animation
     const cvs = document.getElementById('matrix-bg');
     const c = cvs.getContext('2d');
-    cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+    function resize() {
+        cvs.width = window.innerWidth; 
+        cvs.height = window.innerHeight;
+    }
+    window.onresize = resize; resize();
+
     const drops = Array(Math.floor(cvs.width/15)).fill(1);
     function draw() {
         c.fillStyle = "rgba(0,0,0,0.1)"; c.fillRect(0,0,cvs.width,cvs.height);
@@ -141,6 +175,7 @@
     }
     setInterval(draw, 50);
 
+    // Game Logic
     let money = 0, click = 1, auto = 0, levels = {cpu:0, ram:1}, costs = {cpu:20, ram:50}, bossActive = false;
 
     function format(num) {
@@ -169,7 +204,19 @@
         if(!bossActive) localStorage.setItem('cyber_save_ban', JSON.stringify({money, levels, costs, click, auto}));
     }
 
-    function doHack() { if(!bossActive) { money += click; updateUI(); } }
+    function doHack() { 
+        if(!bossActive) { 
+            money += click; 
+            const log = document.createElement('div');
+            log.style.color = '#0f0';
+            log.style.fontSize = '12px';
+            log.innerText = `> Decrypting packet... SUCCESS +$${click}`;
+            const term = document.getElementById('terminal');
+            term.prepend(log);
+            if(term.childNodes.length > 20) term.lastChild.remove();
+            updateUI(); 
+        } 
+    }
 
     function buy(t) {
         if(levels[t] < 50 && money >= costs[t] && !bossActive) {
@@ -179,7 +226,7 @@
         }
     }
 
-    // Cơ chế BAN
+    // Ban Mechanism
     function triggerBan() {
         bossActive = false;
         localStorage.clear();
