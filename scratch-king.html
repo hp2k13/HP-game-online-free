@@ -18,10 +18,37 @@
             transition: filter 0.1s;
         }
 
+        /* --- STYLE NÚT X (RANK DASH STYLE) --- */
+        .home-btn {
+            position: fixed; 
+            top: 20px; 
+            left: 20px;
+            padding: 12px 25px; 
+            background: rgba(0, 0, 0, 0.5);
+            color: white; 
+            text-decoration: none; 
+            border-radius: 30px;
+            font-weight: bold; 
+            z-index: 20000; /* Cao nhất để không bị che bởi jumpscare hay canvas */
+            border: 2px solid #fff;
+            transition: 0.3s; 
+            font-size: 14px;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .home-btn:hover { 
+            background: #ff4757; 
+            transform: scale(1.1); 
+            color: white;
+            box-shadow: 0 0 15px rgba(255, 71, 87, 0.5);
+        }
+
         /* --- SIDEBAR --- */
         #sidebar { 
             width: 350px; background: var(--panel); border-right: 1px solid #334155;
-            display: flex; flex-direction: column; padding: 25px; z-index: 100; position: relative;
+            display: flex; flex-direction: column; padding: 80px 25px 25px; z-index: 100; position: relative;
         }
         .rank-badge { background: var(--accent); color: white; padding: 5px 15px; border-radius: 50px; font-size: 12px; font-weight: 800; width: fit-content; margin-bottom: 10px; }
         .stat-group { background: #0f172a; padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #334155; }
@@ -62,6 +89,8 @@
     </style>
 </head>
 <body>
+
+<a href="index.html" class="home-btn">X</a>
 
 <div id="sidebar">
     <div class="rank-badge" id="rank-name">Hạng: Đang tải...</div>
@@ -126,7 +155,6 @@
         multi: 1, xray: false, tempLuck: false
     };
 
-    // --- HỆ THỐNG LƯU TRỮ ---
     function save() {
         localStorage.setItem('scratch_sim_v3', JSON.stringify(sim));
         document.getElementById('save-status').innerText = "ĐÃ LƯU...";
@@ -140,12 +168,14 @@
         updateUI(); updateRank();
     }
 
-    // --- GAMEPLAY ---
     function showTab(tab) {
-        ['cards','shop','skills'].forEach(t => document.getElementById(t+'-tab').style.display = 'none');
+        ['cards','shop','skills'].forEach(t => {
+            const el = document.getElementById(t+'-tab');
+            if(el) el.style.display = 'none';
+        });
         document.getElementById(tab+'-tab').style.display = 'block';
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        event.currentTarget.classList.add('active');
+        if(event) event.currentTarget.classList.add('active');
     }
 
     function renderMenus() {
@@ -221,7 +251,7 @@
         sim.xp += 34;
         if(sim.xp >= 100) { sim.xp = 0; sim.lvl++; updateRank(); }
         sim.multi = 1; sim.xray = false; sim.tempLuck = false;
-        ctx.clearRect(0,0,1000,1000);
+        ctx.clearRect(0,0,2000,2000);
         document.getElementById('action-btn').style.display = 'none';
         updateUI(); save();
     }
@@ -262,7 +292,6 @@
 
     function hardReset() { if(confirm("Xóa hết dữ liệu?")) { localStorage.clear(); location.reload(); } }
 
-    // --- KINH DỊ (JUMPSCARE) ---
     function triggerHack() {
         const hack = document.getElementById('hack-overlay');
         hack.style.display = 'flex';
@@ -274,8 +303,6 @@
             if(i > 15) { clearInterval(interval); startScare(); }
         }, 150);
     }
-
-    
 
     function startScare() {
         const audio = new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptitle=Scream&filename=24/244321-729f6044-6338-4f81-912b-ec1d7e2e6044.mp3');
