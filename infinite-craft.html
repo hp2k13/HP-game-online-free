@@ -7,56 +7,33 @@
         :root { --primary: #2563eb; --bg: #ffffff; --sidebar: #f8fafc; --border: #e2e8f0; }
         body { margin: 0; font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; background: var(--bg); }
         
-        /* --- STYLE NÚT X (RANK DASH STYLE) --- */
         .home-btn {
-            position: fixed; 
-            top: 20px; 
-            left: 20px;
-            padding: 12px 25px; 
-            background: rgba(0, 0, 0, 0.5);
-            color: white; 
-            text-decoration: none; 
-            border-radius: 30px;
-            font-weight: bold; 
-            z-index: 2000; /* Đảm bảo nằm trên cùng của canvas */
-            border: 2px solid #fff;
-            transition: 0.3s; 
-            font-size: 14px;
-            font-family: 'Segoe UI', sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: fixed; top: 20px; left: 20px; padding: 12px 25px; 
+            background: rgba(0, 0, 0, 0.5); color: white; text-decoration: none; 
+            border-radius: 30px; font-weight: bold; z-index: 2000; border: 2px solid #fff;
+            transition: 0.3s; font-size: 14px; display: flex; align-items: center; justify-content: center;
         }
-        .home-btn:hover { 
-            background: #ff4757; 
-            transform: scale(1.1); 
-            color: white;
-            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
-        }
+        .home-btn:hover { background: #ff4757; transform: scale(1.1); box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3); }
 
-        /* Play Area */
         #play-area { flex-grow: 1; position: relative; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 40px 40px; }
         
-        /* Sidebar */
         #sidebar { width: 350px; background: var(--sidebar); border-left: 1px solid var(--border); display: flex; flex-direction: column; box-shadow: -4px 0 15px rgba(0,0,0,0.05); z-index: 1000; }
-        
         .header { padding: 20px; background: white; border-bottom: 1px solid var(--border); }
         .progress-container { margin-top: 10px; background: #e2e8f0; border-radius: 10px; height: 12px; overflow: hidden; }
         #progress-bar { background: var(--primary); width: 0%; height: 100%; transition: width 0.5s ease; }
         #stats { font-size: 13px; margin-top: 5px; color: #64748b; font-weight: bold; }
 
         #inventory { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; }
-        
         .item {
             padding: 8px 14px; background: white; border: 1px solid var(--border); border-radius: 8px;
             cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px;
             font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: all 0.2s;
         }
         .item:hover { border-color: var(--primary); transform: translateY(-2px); }
-        .canvas-item { position: absolute; z-index: 10; transition: transform 0.1s; }
+        .canvas-item { position: absolute; z-index: 10; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
         #search { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); margin-top: 10px; outline: none; }
-        .controls { position: absolute; bottom: 20px; left: 20px; display: flex; gap: 10px; } /* Chuyển controls xuống dưới để tránh nút X */
+        .controls { position: absolute; bottom: 20px; left: 20px; display: flex; gap: 10px; }
         button { padding: 8px 15px; border-radius: 6px; border: 1px solid var(--border); background: white; cursor: pointer; transition: 0.2s; }
         button:hover { background: #f1f5f9; }
     </style>
@@ -83,7 +60,6 @@
 </div>
 
 <script>
-    // 1. DANH SÁCH CÔNG THỨC
     const recipes = {
         "lửa+nước": { name: "Hơi nước", emoji: "💨" },
         "đất+nước": { name: "Bùn", emoji: "💩" },
@@ -145,6 +121,31 @@
         return el.innerText.replace(/[0-9]/g, '').replace(/[^\p{L}\s]/gu, '').trim().toLowerCase();
     }
 
+    // HÀM MỚI: Tìm vị trí trống trên màn hình
+    function findEmptySpace() {
+        const area = playArea.getBoundingClientRect();
+        const items = document.querySelectorAll('.canvas-item');
+        const padding = 60;
+        
+        // Thử 50 lần để tìm chỗ không bị đè
+        for (let i = 0; i < 50; i++) {
+            let x = Math.random() * (area.width - 150) + 50;
+            let y = Math.random() * (area.height - 100) + 50;
+            
+            let overlap = false;
+            items.forEach(item => {
+                const rect = item.getBoundingClientRect();
+                const ix = item.offsetLeft;
+                const iy = item.offsetTop;
+                if (Math.abs(x - ix) < 100 && Math.abs(y - iy) < 50) overlap = true;
+            });
+            
+            if (!overlap) return { x, y };
+        }
+        // Nếu k tìm thấy chỗ trống hoàn hảo, trả về vị trí ngẫu nhiên
+        return { x: Math.random() * (area.width - 150), y: Math.random() * (area.height - 100) };
+    }
+
     function updateStats() {
         const count = discovered.length;
         const percent = Math.min((count / TOTAL_GOAL) * 100, 100);
@@ -158,21 +159,41 @@
             const div = document.createElement('div');
             div.className = 'item';
             div.innerHTML = `<small>${index + 1}</small> <span>${item.emoji}</span> <span>${item.name}</span>`;
-            div.onmousedown = (e) => spawn(item, e.clientX, e.clientY);
+            
+            // SỬA TẠI ĐÂY: Click vào là tự spawn vào chỗ trống
+            div.onclick = () => {
+                const pos = findEmptySpace();
+                spawn(item, pos.x, pos.y, true);
+            };
+            
             inventory.appendChild(div);
         });
         localStorage.setItem('craft_500_save', JSON.stringify(discovered));
         updateStats();
     }
 
-    function spawn(item, x, y) {
+    function spawn(item, x, y, isRelative = false) {
         const el = document.createElement('div');
         el.className = 'item canvas-item';
         el.innerHTML = `<span>${item.emoji}</span> <span>${item.name}</span>`;
-        const rect = playArea.getBoundingClientRect();
-        el.style.left = (x - rect.left - 40) + 'px';
-        el.style.top = (y - rect.top - 20) + 'px';
+        
+        const areaRect = playArea.getBoundingClientRect();
+        
+        if (isRelative) {
+            // Tọa độ đã tính toán tương đối với playArea
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+        } else {
+            // Tọa độ từ chuột (clientX/Y)
+            el.style.left = (x - areaRect.left - 40) + 'px';
+            el.style.top = (y - areaRect.top - 20) + 'px';
+        }
+        
+        // Hiệu ứng xuất hiện
+        el.style.transform = "scale(0)";
         playArea.appendChild(el);
+        setTimeout(() => el.style.transform = "scale(1)", 10);
+        
         makeDraggable(el);
     }
 
@@ -219,7 +240,8 @@
                     const nx = other.offsetLeft;
                     const ny = other.offsetTop;
                     activeEl.remove(); other.remove();
-                    spawn(result, nx + playArea.getBoundingClientRect().left + 40, ny + playArea.getBoundingClientRect().top + 20);
+                    // Spawn kết quả ngay tại vị trí va chạm
+                    spawn(result, nx + 40 + playArea.getBoundingClientRect().left, ny + 20 + playArea.getBoundingClientRect().top);
 
                     if (!discovered.find(d => d.name.toLowerCase() === result.name.toLowerCase())) {
                         discovered.push(result);
