@@ -41,7 +41,6 @@
             gap: 30px;
         }
 
-        /* --- LOGO PHONG CÁCH CRAZY GAME (TĨNH & ĐẸP) --- */
         .brand-logo {
             display: flex;
             align-items: center;
@@ -91,7 +90,6 @@
             text-transform: uppercase;
         }
 
-        /* --- CONTROLS --- */
         .controls-wrapper { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 15px; }
         
         .search-box input {
@@ -122,7 +120,6 @@
         }
         .lang-btn:hover, .lang-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(0, 245, 255, 0.1); }
 
-        /* --- GRID HỆ THỐNG GAME --- */
         .container {
             max-width: 1200px; margin: 20px auto 100px;
             padding: 0 25px;
@@ -189,6 +186,13 @@
 </header>
 
 <div class="container" id="gameGrid">
+    <div class="game-card" onclick="playGame('python.html')">
+        <span class="badge badge-new" data-key="new">NEW</span>
+        <div class="game-icon">🐍</div>
+        <div class="game-title" data-key="t8">Python IDE Pro</div>
+        <div class="game-desc" data-key="d8">Professional real-time Python editor with detailed error reporting.</div>
+    </div>
+
     <div class="game-card" onclick="playGame('paint-pro.html')">
         <span class="badge badge-new" data-key="new">NEW</span>
         <div class="game-icon">🎨</div>
@@ -243,11 +247,66 @@
 
 <script>
     const i18n = {
-        vi: { search: "Tìm kiếm trò chơi...", t1: "Rank Dash", d1: "Vượt chướng ngại vật với tốc độ ánh sáng.", t2: "Minesweeper Pro", d2: "Thử thách logic trong thế giới Cyberpunk.", t3: "Neon Bird", d3: "Bay qua các cột năng lượng neon.", t4: "Cyber Hacker", d4: "Trở thành huyền thoại thế giới ngầm kỹ thuật số.", t5: "Scratch King", d5: "Từ kẻ vô gia cư trở thành tỷ phú cào thẻ.", t6: "Chế Tạo Vô Hạn", d6: "Hợp nhất các nguyên tố để tạo ra cả vũ trụ.", hot: "HOT", new: "MỚI", sim: "MÔ PHỎNG" },
-        en: { search: "Search games...", t1: "Rank Dash", d1: "Dash through obstacles with light speed.", t2: "Minesweeper Pro", d2: "Test your logic in a Cyberpunk world.", t3: "Neon Bird", d3: "Fly through radiant neon energy pillars.", t4: "Cyber Hacker", d4: "Become a legend in the digital underworld.", t5: "Scratch King", d5: "Rise from rags to riches in the ultimate scratch simulator.", t6: "Infinite Craft", d6: "Merge elements to create the entire universe.", hot: "HOT", new: "NEW", sim: "SIM" },
-        zh: { search: "搜索游戏...", t1: "竞速冲刺", d1: "以光速冲破障碍。", t2: "扫雷专业版", d2: "在赛博朋克世界测试你的逻辑。", t3: "霓虹鸟", d3: "飞越灿烂的霓虹能量柱。", t4: "网络黑客", d4: "成为数字地下世界的传奇。", t5: "刮刮乐之王", d5: "在终极刮刮乐模拟器中从赤贫致富。", t6: "无限合成", d6: "合并元素创造整个宇宙。", hot: "热门", new: "新品", sim: "模拟" },
-        ja: { search: "ゲームを検索...", t1: "ランクダッシュ", d1: "光速で障害物を駆け抜けろ。", t2: "マインスイーパープロ", d2: "サイバーパンクな世界で論理を試そう。", t3: "ネオンバード", d3: "輝くネオンの柱を通り抜けろ。", t4: "サイ버하커", d4: "デジタル裏社会の伝説になれ。", t5: "スクラッチ・キング", d5: "究極のスクラッチシミュレーターで、無一文から富豪へ成り上がれ。", t6: "インフィニットクラフト", d6: "要素を組み合わせて宇宙を創造しよう。", hot: "人気", new: "新作", sim: "シム" },
-        ko: { search: "게임 검색...", t1: "랭크 대시", d1: "광속으로 장애물을 돌파하세요.", t2: "지뢰찾기 프로", d2: "사이버펑크 세계에서 논리를 테스트하세요.", t3: "네온 버드", d3: "빛나는 네온 기둥 사이를 날아보세요.", t4: "사이버 해커", d4: "디지털 지하 세계의 전설이 되십시오.", t5: "스크래치 킹", d5: "궁극의 스크래치 시뮬레이터에서 빈민에서 부자로 거듭나세요.", t6: "인피니트 크래프트", d6: "원소를 결합하여 전 우주를 만들어보세요.", hot: "인기", new: "신규", sim: "시뮬" }
+        vi: { 
+            search: "Tìm kiếm trò chơi...", 
+            t1: "Rank Dash", d1: "Vượt chướng ngại vật với tốc độ ánh sáng.", 
+            t2: "Minesweeper Pro", d2: "Thử thách logic trong thế giới Cyberpunk.", 
+            t3: "Neon Bird", d3: "Bay qua các cột năng lượng neon.", 
+            t4: "Cyber Hacker", d4: "Trở thành huyền thoại thế giới ngầm kỹ thuật số.", 
+            t5: "Scratch King", d5: "Từ kẻ vô gia cư trở thành tỷ phú cào thẻ.", 
+            t6: "Chế Tạo Vô Hạn", d6: "Hợp nhất các nguyên tố để tạo ra cả vũ trụ.", 
+            t7: "HP Paint Pro", d7: "Studio vẽ kỹ thuật số chuyên nghiệp với hệ thống lớp.",
+            t8: "Python IDE Pro", d8: "Trình soạn thảo Python chuyên nghiệp, báo lỗi chi tiết.",
+            hot: "HOT", new: "MỚI", sim: "MÔ PHỎNG" 
+        },
+        en: { 
+            search: "Search games...", 
+            t1: "Rank Dash", d1: "Dash through obstacles with light speed.", 
+            t2: "Minesweeper Pro", d2: "Test your logic in a Cyberpunk world.", 
+            t3: "Neon Bird", d3: "Fly through radiant neon energy pillars.", 
+            t4: "Cyber Hacker", d4: "Become a legend in the digital underworld.", 
+            t5: "Scratch King", d5: "Rise from rags to riches in the ultimate scratch simulator.", 
+            t6: "Infinite Craft", d6: "Merge elements to create the entire universe.", 
+            t7: "HP Paint Pro", d7: "Professional digital art studio with layer system.",
+            t8: "Python IDE Pro", d8: "Professional real-time Python editor with detailed error reporting.",
+            hot: "HOT", new: "NEW", sim: "SIM" 
+        },
+        zh: { 
+            search: "搜索游戏...", 
+            t1: "竞速冲刺", d1: "以光速冲破障碍。", 
+            t2: "扫雷专业版", d2: "在赛博朋克世界测试你的逻辑。", 
+            t3: "霓虹鸟", d3: "飞越灿烂的霓虹能量柱。", 
+            t4: "网络黑客", d4: "成为数字地下世界的传奇。", 
+            t5: "刮刮乐之王", d5: "在终极刮刮乐模拟器中从赤贫致富。", 
+            t6: "无限合成", d6: "合并元素创造整个宇宙。", 
+            t7: "HP 绘画专业版", d7: "带有图层系统的专业数字艺术工作室。",
+            t8: "Python 专业编辑器", d8: "专业的实时 Python 编辑器，具有详细的错误报告功能。",
+            hot: "热门", new: "新品", sim: "模拟" 
+        },
+        ja: { 
+            search: "ゲームを検索...", 
+            t1: "ランクダッシュ", d1: "光速で障害物を駆け抜けろ。", 
+            t2: "マインスイーパープロ", d2: "サイバーパンクな世界で論理を試そう。", 
+            t3: "ネオンバード", d3: "輝くネオンの柱を通り抜けろ。", 
+            t4: "サイバーハッカー", d4: "デジタル裏社会の伝説になれ。", 
+            t5: "スクラッチ・キング", d5: "究極のスクラッチシミュレーターで、無一文から富豪へ成り上がれ。", 
+            t6: "インフィニットクラフト", d6: "要素を組み合わせて宇宙を創造しよう。", 
+            t7: "HP ペイントプロ", d7: "レイヤーシステムを備えたプロフェッショナルなデジタルアートスタジオ。",
+            t8: "Python プロ IDE", d8: "詳細なエラー報告機能を備えたプロフェッショナルな Python エディター。",
+            hot: "人気", new: "新作", sim: "シム" 
+        },
+        ko: { 
+            search: "게임 검색...", 
+            t1: "랭크 대시", d1: "광속으로 장애물을 돌파하세요.", 
+            t2: "지뢰찾기 프로", d2: "사이버펑크 세계에서 논리를 테스트하세요.", 
+            t3: "네온 버드", d3: "빛나는 네온 기둥 사이를 날아보세요.", 
+            t4: "사이버 해커", d4: "디지털 지하 세계의 전설이 되십시오.", 
+            t5: "스크래치 킹", d5: "궁극의 스크래치 시뮬레이터에서 빈민에서 부자로 거듭나세요.", 
+            t6: "인피니트 크래프트", d6: "원소를 결합하여 전 우주를 만들어보세요.", 
+            t7: "HP 페인트 프로", d7: "레이어 시스템을 갖춘 전문 디지털 아트 스튜디오.",
+            t8: "파이썬 프로 IDE", d8: "상세한 오류 보고 기능이 있는 전문적인 실시간 파이썬 편집기.",
+            hot: "인기", new: "신규", sim: "시뮬레이션" 
+        }
     };
 
     document.getElementById('searchInput').addEventListener('input', (e) => {
