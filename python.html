@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HP Python Professional IDE</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/selection/active-line.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+
+    <style>
+        /* 1. RESET & VARIABLE SYSTEM */
+        :root {
+            --bg-dark: #1a1a2e;
+            --editor-bg: #282a36;
+            --accent: #50fa7b;
+            --error: #ff4757;
+            --warning: #ffb86c;
+            --text: #f8f8f2;
+            --panel: #16213e;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { 
+            height: 100%; width: 100%; 
+            background: var(--bg-dark); 
+            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden; /* Chặn cuộn trang ngoài */
+        }
+
+        /* 2. NÚT X - STYLE CHUẨN RANK DASH */
+        .home-btn {
+            position: fixed; top: 20px; left: 20px;
+            width: 50px; height: 50px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white; text-decoration: none;
+            border-radius: 50%; border: 2px solid #fff;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000; font-weight: bold; font-size: 20px;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(5px);
+        }
+        .home-btn:hover {
+            background: #ff4757;
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 0 20px rgba(255, 71, 87, 0.6);
+        }
+
+        /* 3. LAYOUT STRUCTURE */
+        .app-wrapper {
+            display: flex; flex-direction: column; height: 100vh; width: 100vw;
+        }
+
+        header {
+            background: var(--panel);
+            height: 60px; padding: 0 20px 0 85px; /* Chừa chỗ cho nút X */
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid #0f3460;
+        }
+
+        .logo-area h1 {
+            font-size: 18px; color: var(--accent); letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(80, 250, 123, 0.3);
+        }
+
+        .controls { display: flex; gap: 12px; }
+
+        /* 4. BUTTON STYLES */
+        .btn {
+            padding: 8px 20px; border: none; border-radius: 6px;
+            font-weight: bold; cursor: pointer; font-family: inherit;
+            transition: 0.2s; display: flex; align-items: center; gap: 8px;
+        }
+        .btn-run { background: var(--accent); color: #1a1a2e; }
+        .btn-run:hover { background: #fff; transform: translateY(-2px); }
+        .btn-clear { background: #4e5e7e; color: white; }
+        .btn-clear:hover { background: var(--error); }
+
+        /* 5. EDITOR ZONE */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        
+        .editor-box { flex: 1; border-bottom: 3px solid #0f3460; font-size: 16px; }
+        .CodeMirror { height: 100% !important; }
+
+        /* 6. TERMINAL (CONSOLE) ZONE */
+        .terminal-box {
+            height: 35%; background: #000;
+            display: flex; flex-direction: column;
+            position: relative;
+        }
+        .terminal-header {
+            background: #0f3460; padding: 5px 15px;
+            font-size: 12px; color: #4ecca3;
+            display: flex; justify-content: space-between;
+        }
+        #console-out {
+            flex: 1; padding: 15px; overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px; line-height: 1.6; color: #dcdcdc;
+            white-space: pre-wrap;
+        }
+
+        /* 7. LOADING OVERLAY */
+        #loader {
+            position: fixed; inset: 0; background: var(--bg-dark);
+            z-index: 9999; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+        }
+        .spinner {
+            width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.1);
+            border-left-color: var(--accent); border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* 8. MESSAGE TYPES */
+        .msg-error {
+            color: var(--error); background: rgba(255, 71, 87, 0.1);
+            padding: 10px; border-left: 4px solid var(--error);
+            margin: 5px 0; display: block;
+        }
+        .msg-success { color: #f1fa8c; }
+        .msg-info { color: var(--comment); font-style: italic; opacity: 0.7; }
+
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="home-btn" title="Quay lại">✕</a>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <h2 style="color: white; letter-spacing: 3px;">INITIALIZING CORE...</h2>
+        <p id="load-status" style="color: var(--accent); margin-top: 10px;">Đang nạp thư viện Python...</p>
+    </div>
+
+    <div class="app-wrapper">
+        <header>
+            <div class="logo-area">
+                <h1>HP-PYTHON <span style="color: white;">IDE v3.0</span></h1>
+            </div>
+            <div class="controls">
+                <button class="btn btn-clear" onclick="clearTerminal()">🗑 CLEAR</button>
+                <button class="btn btn-run" id="run-btn" onclick="executePython()">▶ RUN CODE</button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="editor-box">
+                <textarea id="python-editor"># Chào mừng bạn đến với HP Python Pro IDE!
+# -----------------------------------------</textarea>
+            </div>
+
+            <div class="terminal-box">
+                <div class="terminal-header">
+                    <span>OUTPUT TERMINAL</span>
+                    <span id="run-time">Status: Ready</span>
+                </div>
+                <div id="console-out"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- CẤU HÌNH EDITOR (CODEMIRROR) ---
+        const editor = CodeMirror.fromTextArea(document.getElementById("python-editor"), {
+            mode: "python",
+            theme: "dracula",
+            lineNumbers: true,
+            autoCloseBrackets: true,
+            styleActiveLine: true,
+            matchBrackets: true,
+            indentUnit: 4,
+            lineWrapping: true,
+            extraKeys: {"Ctrl-Enter": executePython}
+        });
+
+        // --- KHỞI TẠO PYODIDE ---
+        let pyodideCore = null;
+
+        async function initSystem() {
+            const statusLabel = document.getElementById("load-status");
+            try {
+                // Tải Pyodide từ CDN
+                pyodideCore = await loadPyodide();
+                
+                statusLabel.innerText = "Lõi Python đã sẵn sàng!";
+                
+                // Hiệu ứng ẩn Loader chuyên nghiệp
+                const loader = document.getElementById("loader");
+                loader.style.opacity = "0";
+                setTimeout(() => {
+                    loader.style.display = "none";
+                }, 500);
+
+                writeLog(">> Hệ thống HP-IDE đã khởi động thành công.", "info");
+            } catch (err) {
+                statusLabel.innerText = "LỖI: Không thể tải thư viện!";
+                statusLabel.style.color = "red";
+                console.error(err);
+            }
+        }
+
+        // --- HÀM THỰC THI CODE CHÍNH ---
+        async function executePython() {
+            if (!pyodideCore) return;
+
+            const code = editor.getValue();
+            const outBox = document.getElementById("console-out");
+            const runBtn = document.getElementById("run-btn");
+            const timeLabel = document.getElementById("run-time");
+
+            // Hiệu ứng khi đang chạy
+            runBtn.disabled = true;
+            runBtn.innerText = "RUNNING...";
+            timeLabel.innerText = "Status: Executing...";
+            const startTime = performance.now();
+
+            try {
+                // Reset Output và thiết lập bắt luồng in (stdout)
+                pyodideCore.runPython(`
+                    import sys, io
+                    sys.stdout = io.StringIO()
+                    sys.stderr = io.StringIO()
+                `);
+
+                // Chạy mã nguồn người dùng
+                await pyodideCore.runPythonAsync(code);
+
+                // Lấy dữ liệu từ stdout
+                const stdout = pyodideCore.runPython("sys.stdout.getvalue()");
+                const stderr = pyodideCore.runPython("sys.stderr.getvalue()");
+
+                if (stdout) writeLog(stdout, "success");
+                if (stderr) writeLog(stderr, "error");
+                
+                if (!stdout && !stderr) {
+                    writeLog("Chương trình đã chạy (không có kết quả in).", "info");
+                }
+
+            } catch (err) {
+                // XỬ LÝ LỖI CHI TIẾT
+                const errorTrace = err.message;
+                writeLog(`❌ LỖI THỰC THI:\n${errorTrace}`, "error");
+            } finally {
+                // Hoàn tất
+                const endTime = performance.now();
+                const duration = ((endTime - startTime) / 1000).toFixed(2);
+                
+                runBtn.disabled = false;
+                runBtn.innerText = "▶ RUN CODE";
+                timeLabel.innerText = `Last run: ${duration}s`;
+                
+                // Tự động cuộn xuống cuối Terminal
+                outBox.scrollTop = outBox.scrollHeight;
+            }
+        }
+
+        // --- HÀM GHI LOG VÀO TERMINAL ---
+        function writeLog(message, type) {
+            const outBox = document.getElementById("console-out");
+            const entry = document.createElement("div");
+            
+            if (type === "error") {
+                entry.className = "msg-error";
+                entry.innerText = message;
+            } else if (type === "info") {
+                entry.className = "msg-info";
+                entry.innerText = `[SYS] ${message}`;
+            } else {
+                entry.className = "msg-success";
+                entry.innerText = message;
+            }
+            
+            outBox.appendChild(entry);
+            outBox.scrollTop = outBox.scrollHeight;
+        }
+
+        function clearTerminal() {
+            document.getElementById("console-out").innerHTML = "";
+            writeLog("Terminal đã được dọn dẹp.", "info");
+        }
+
+        // Bắt đầu khởi tạo khi trang load xong
+        window.onload = initSystem;
+
+    </script>
+</body>
+</html>
