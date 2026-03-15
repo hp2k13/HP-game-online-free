@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokédex Pro - Siêu Tốc & Chính Xác</title>
+    <style>
+        :root {
+            --primary: #ff1f1f; --bg: #0b0b0b; --card-bg: #1a1a1a;
+            --text: #ffffff; --accent: #ffcb05;
+            /* Hệ màu Pokémon */
+            --fire: #ff4422; --water: #3399ff; --grass: #77cc55; --electric: #ffcc33;
+            --ice: #66ccff; --fighting: #bb5544; --poison: #aa5599; --ground: #ddbb55;
+            --flying: #8899ff; --psychic: #ff5599; --bug: #aabb22; --rock: #bbaa66;
+            --ghost: #6666bb; --dragon: #7766ee; --dark: #775544; --steel: #aaaabb;
+            --fairy: #ee99ee; --normal: #aaaa99;
+        }
+
+        body {
+            background-color: var(--bg); color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding-bottom: 50px;
+            transition: opacity 0.5s;
+        }
+
+        /* NÚT QUAY LẠI GAME HUB */
+        .btn-back-hub {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(255, 31, 31, 0.4);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+        }
+        .btn-back-hub:hover {
+            transform: rotate(90deg) scale(1.1);
+            background: #fff;
+            color: var(--primary);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.6);
+        }
+
+        header {
+            background: linear-gradient(180deg, var(--primary) 0%, #900 100%);
+            padding: 30px 20px; text-align: center;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.7); position: sticky; top: 0; z-index: 100;
+        }
+
+        .controls {
+            max-width: 1000px; margin: 25px auto; display: flex; gap: 15px; padding: 0 20px;
+        }
+
+        input, select {
+            padding: 15px 25px; border-radius: 30px; border: none;
+            background: #252525; color: white; flex: 1; outline: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 16px;
+        }
+
+        .btn-summon {
+            background: var(--accent); color: #000; font-weight: bold;
+            padding: 10px 30px; border-radius: 30px; cursor: pointer; border: none;
+            transition: 0.3s; box-shadow: 0 4px 15px rgba(255,203,5,0.3);
+        }
+
+        .btn-summon:hover { transform: scale(1.1); background: #fff; }
+
+        .pokedex-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 25px; padding: 20px; max-width: 1400px; margin: auto;
+        }
+
+        .card {
+            background: var(--card-bg); border-radius: 20px; padding: 20px;
+            text-align: center; position: relative; cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid #333; overflow: hidden;
+            animation: slideUp 0.5s ease forwards;
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card:hover {
+            transform: translateY(-10px) scale(1.05);
+            border-color: var(--accent); box-shadow: 0 15px 35px rgba(255,203,5,0.15);
+        }
+
+        .img-box {
+            height: 140px; display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            margin-bottom: 10px; border-radius: 50%;
+        }
+
+        .card img {
+            width: 120px; height: 120px;
+            transition: opacity 0.6s ease; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
+        }
+
+        .card h3 { margin: 10px 0; text-transform: capitalize; font-size: 18px; }
+        .card .id { color: #777; font-size: 13px; font-weight: bold; margin: 0; }
+
+        .types { display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; }
+        .type {
+            padding: 5px 12px; border-radius: 8px; font-size: 10px;
+            font-weight: bold; text-transform: uppercase; color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); display: none; justify-content: center;
+            align-items: center; z-index: 1000; backdrop-filter: blur(8px);
+        }
+
+        .modal-content {
+            background: #222; padding: 40px; border-radius: 30px;
+            max-width: 450px; width: 90%; text-align: center; border: 2px solid var(--accent);
+        }
+
+        .fire { background: var(--fire); } .water { background: var(--water); }
+        .grass { background: var(--grass); } .electric { background: var(--electric); }
+        .poison { background: var(--poison); } .normal { background: var(--normal); }
+        .ground { background: var(--ground); } .flying { background: var(--flying); }
+        .psychic { background: var(--psychic); } .bug { background: var(--bug); }
+        .rock { background: var(--rock); } .ghost { background: var(--ghost); }
+        .dragon { background: var(--dragon); } .dark { background: var(--dark); }
+        .steel { background: var(--steel); } .fairy { background: var(--fairy); }
+    </style>
+</head>
+<body>
+
+<a href="index.html" class="btn-back-hub" title="Quay lại Game Hub" onclick="exitTransition(event)">✕</a>
+
+<header>
+    <h1 style="margin:0; font-size: 36px; letter-spacing: 2px;">POKÉDEX PRO</h1>
+    <p style="opacity: 0.8;">Data chính xác 100% • Tự động Lazy Load</p>
+</header>
+
+<div class="controls">
+    <input type="text" id="search" placeholder="Nhập tên Pokémon cần tìm..." onkeyup="filterList()">
+    <select id="gen-select">
+        <option value="1">Gen 1 - Kanto (1-151)</option>
+        <option value="2">Gen 2 - Johto (152-251)</option>
+        <option value="3">Gen 3 - Hoenn (252-386)</option>
+        <option value="4">Gen 4 - Sinnoh (387-493)</option>
+        <option value="5">Gen 5 - Unova (494-649)</option>
+        <option value="6">Gen 6 - Kalos (650-721)</option>
+        <option value="7">Gen 7 - Alola (722-809)</option>
+        <option value="8">Gen 8 - Galar (810-905)</option>
+        <option value="9">Gen 9 - Paldea (906-1025)</option>
+    </select>
+    <button class="btn-summon" onclick="loadGen()">TRIỆU HỒI</button>
+</div>
+
+<div class="pokedex-grid" id="grid"></div>
+
+<div class="modal" id="modal" onclick="this.style.display='none'">
+    <div class="modal-content" id="modal-body"></div>
+</div>
+
+<script>
+    const grid = document.getElementById('grid');
+    const search = document.getElementById('search');
+    const genSelect = document.getElementById('gen-select');
+    let allPokemon = [];
+
+    const GENS = {
+        1: [1, 151], 2: [152, 251], 3: [252, 386], 4: [387, 493], 5: [494, 649],
+        6: [650, 721], 7: [722, 809], 8: [810, 905], 9: [906, 1025]
+    };
+
+    // Hàm thoát có hiệu ứng mờ dần (Fade out)
+    function exitTransition(e) {
+        e.preventDefault();
+        const url = e.currentTarget.href;
+        document.body.style.opacity = '0';
+        setTimeout(() => {
+            window.location.href = url;
+        }, 500);
+    }
+
+    async function loadGen() {
+        grid.innerHTML = '<h2 style="grid-column: 1/-1; text-align:center;">Đang tải dữ liệu chuẩn...</h2>';
+        const [start, end] = GENS[genSelect.value];
+        const cacheName = `gen_${genSelect.value}`;
+        const cachedData = localStorage.getItem(cacheName);
+
+        if (cachedData) {
+            allPokemon = JSON.parse(cachedData);
+            renderCards(allPokemon);
+        } else {
+            const promises = [];
+            for (let i = start; i <= end; i++) {
+                promises.push(fetch(`https://pokeapi.co/api/v2/pokemon/${i}`).then(res => res.json()));
+            }
+            allPokemon = await Promise.all(promises);
+            localStorage.setItem(cacheName, JSON.stringify(allPokemon));
+            renderCards(allPokemon);
+        }
+    }
+
+    function renderCards(list) {
+        grid.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+        list.forEach(poke => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.onclick = () => showInfo(poke);
+            const imgUrl = poke.sprites.other['official-artwork'].front_default || poke.sprites.front_default;
+            const types = poke.types.map(t => `<span class="type ${t.type.name}">${t.type.name}</span>`).join('');
+            card.innerHTML = `
+                <p class="id">#${poke.id.toString().padStart(4, '0')}</p>
+                <div class="img-box">
+                    <img src="${imgUrl}" alt="${poke.name}" loading="lazy" onload="this.style.opacity=1" style="opacity:0">
+                </div>
+                <h3>${poke.name}</h3>
+                <div class="types">${types}</div>
+            `;
+            fragment.appendChild(card);
+        });
+        grid.appendChild(fragment);
+    }
+
+    function filterList() {
+        const query = search.value.toLowerCase();
+        const filtered = allPokemon.filter(p => p.name.includes(query));
+        renderCards(filtered);
+    }
+
+    function showInfo(poke) {
+        const body = document.getElementById('modal-body');
+        const stats = poke.stats.map(s => `
+            <div style="margin: 8px 0; text-align: left;">
+                <div style="display:flex; justify-content:space-between; font-size:12px;">
+                    <span>${s.stat.name.toUpperCase()}</span>
+                    <span>${s.base_stat}</span>
+                </div>
+                <div style="background:#444; height:6px; border-radius:3px; margin-top:4px;">
+                    <div style="background:var(--accent); width:${Math.min(100, (s.base_stat/150)*100)}%; height:100%; border-radius:3px;"></div>
+                </div>
+            </div>
+        `).join('');
+        body.innerHTML = `
+            <img src="${poke.sprites.other['official-artwork'].front_default}" width="180">
+            <h2 style="text-transform: capitalize; color:var(--accent);">${poke.name}</h2>
+            <p>Hệ: ${poke.types.map(t => t.type.name).join(' / ')}</p>
+            <div style="background:#111; padding:15px; border-radius:15px; margin-top:15px;">
+                ${stats}
+            </div>
+        `;
+        document.getElementById('modal').style.display = 'flex';
+    }
+
+    window.onload = loadGen;
+</script>
+</body>
+</html>
